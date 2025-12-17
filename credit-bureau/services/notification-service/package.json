@@ -8,6 +8,7 @@
     "test": "NODE_ENV=test node --test"
   },
   "dependencies": {
+    "kafkajs": "^2.2.4",
     "pg": "^8.16.3"
   }
 }

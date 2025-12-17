@@ -1,5 +1,6 @@
 import { createServer } from './http/server.js';
 import { closeRepository } from './repositories/index.js';
+import { closeDisputeProducer } from './events/disputePublisher.js';
 
 const PORT = process.env.PORT || 4006;
 const server = createServer();
@@ -10,6 +11,7 @@ server.listen(PORT, () => {
 
 async function shutdown(signal) {
   console.log(`Received ${signal}, shutting down dispute service`);
+  await closeDisputeProducer();
   await closeRepository();
   await new Promise((resolve) => server.close(resolve));
   process.exit(0);

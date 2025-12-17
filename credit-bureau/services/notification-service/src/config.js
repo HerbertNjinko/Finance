@@ -18,5 +18,20 @@ export const config = {
     password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE,
     ssl: process.env.PGSSLMODE === 'require'
+  },
+  kafka: {
+    enabled: !isTest && Boolean((process.env.KAFKA_BROKERS || '').trim()),
+    brokers: (process.env.KAFKA_BROKERS || '')
+      .split(',')
+      .map((broker) => broker.trim())
+      .filter(Boolean),
+    clientId: process.env.KAFKA_CLIENT_ID || 'notification-service',
+    groupId: process.env.KAFKA_GROUP_ID || 'notification-service-group',
+    obligationTopic: process.env.KAFKA_OBLIGATION_TOPIC || 'obligation-events',
+    disputeTopic: process.env.KAFKA_DISPUTE_TOPIC || 'dispute-events',
+    fromBeginning: process.env.KAFKA_FROM_BEGINNING === 'true'
+  },
+  notifications: {
+    defaultChannel: process.env.DEFAULT_NOTIFICATION_CHANNEL || 'system'
   }
 };

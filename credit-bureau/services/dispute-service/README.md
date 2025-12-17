@@ -1,6 +1,6 @@
 ## Dispute Service
 
-Tracks borrower disputes reported through institutions or consumer portals. Persists to `disputes.disputes` and exposes endpoints to create, read, update, and list disputes with workflow metadata.
+Tracks borrower disputes reported through institutions or consumer portals. Persists to `disputes.disputes`, exposes endpoints to create/read/update/list disputes, and emits Kafka events (`dispute.created`, `dispute.updated`) so downstream systems (notifications, analytics) stay in sync.
 
 ### Install
 

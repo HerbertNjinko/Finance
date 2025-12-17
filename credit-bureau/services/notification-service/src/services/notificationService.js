@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getRepository } from '../repositories/index.js';
 import { validateTemplatePayload, validateNotificationPayload } from '../validation/notificationValidators.js';
+import { config } from '../config.js';
 
 function buildError(message, details = [], status = 400) {
   const error = new Error(message);
@@ -51,4 +52,32 @@ export async function enqueueNotification(payload = {}) {
     status: 'queued'
   });
   return event;
+}
+
+function buildEventBody(event) {
+  if (!event?.eventType) return null;
+  switch (event.eventType) {
+    case 'obligation.status_updated':
+      return `Obligation ${event.obligationId} changed status to ${event.payload?.status ?? 'unknown'}.`;
+    case 'obligation.repayment_recorded':
+      return `Repayment of ${event.payload?.amount} ${event.payload?.currency} recorded on ${event.payload?.paymentDate}.`;
+    case 'dispute.created':
+      return `Dispute ${event.disputeId} opened for entity ${event.entityId}.`;
+    case 'dispute.updated':
+      return `Dispute ${event.disputeId} updated with status ${event.payload?.status}.`;
+    default:
+      return null;
+  }
+}
+
+export async function handleIncomingEvent(event) {
+  const body = buildEventBody(event);
+  if (!body) return;
+  await enqueueNotification({
+    entityId: event.entityId || null,
+    channel: config.notifications.defaultChannel,
+    destination: event.entityId ? `entity:${event.entityId}` : `event:${event.eventId}`,
+    body,
+    mergeVariables: event.payload || {}
+  });
 }

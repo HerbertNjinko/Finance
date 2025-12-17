@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DisputeEvent",
+  "type": "object",
+  "required": ["eventType", "eventId", "disputeId", "entityId", "occurredAt"],
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "enum": ["dispute.created", "dispute.updated"]
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "disputeId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "entityId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

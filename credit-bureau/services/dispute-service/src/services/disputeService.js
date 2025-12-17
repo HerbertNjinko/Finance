@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getRepository } from '../repositories/index.js';
 import { validateCreatePayload, validateUpdatePayload } from '../validation/disputeValidators.js';
+import { publishDisputeEvent } from '../events/disputePublisher.js';
 
 function buildError(message, details = [], statusCode = 400) {
   const error = new Error(message);
@@ -9,13 +10,28 @@ function buildError(message, details = [], statusCode = 400) {
   return error;
 }
 
+async function emitEvent(eventType, dispute) {
+  try {
+    await publishDisputeEvent(eventType, {
+      eventId: crypto.randomUUID(),
+      disputeId: dispute.disputeId,
+      entityId: dispute.entityId,
+      status: dispute.status,
+      reason: dispute.reason,
+      resolutionSummary: dispute.resolutionSummary ?? null
+    });
+  } catch (error) {
+    console.error('Failed to publish dispute event', error);
+  }
+}
+
 export async function createDispute(payload = {}) {
   const errors = validateCreatePayload(payload);
   if (errors.length) {
     throw buildError('Invalid dispute payload', errors);
   }
   const repository = getRepository();
-  return repository.create({
+  const dispute = await repository.create({
     disputeId: payload.disputeId || crypto.randomUUID(),
     entityId: payload.entityId,
     obligationId: payload.obligationId,
@@ -25,6 +41,8 @@ export async function createDispute(payload = {}) {
     dueAt: payload.dueAt,
     status: payload.status || 'open'
   });
+  await emitEvent('dispute.created', dispute);
+  return dispute;
 }
 
 export async function getDisputeById(disputeId) {
@@ -50,6 +68,7 @@ export async function updateDispute(disputeId, payload = {}) {
   if (!updated) {
     throw buildError('Dispute not found', [], 404);
   }
+  await emitEvent('dispute.updated', updated);
   return updated;
 }
 
