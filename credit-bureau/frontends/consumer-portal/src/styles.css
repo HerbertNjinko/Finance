@@ -1,0 +1,46 @@
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1f2933;
+  background-color: #f8fafc;
+}
+
+body {
+  margin: 0;
+}
+
+.layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+}
+
+aside {
+  background: #0f172a;
+  color: #fff;
+  padding: 32px 16px;
+}
+
+aside h1 {
+  font-size: 1.4rem;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+nav a {
+  color: #cbd5f5;
+  text-decoration: none;
+}
+
+nav a.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+main {
+  padding: 32px;
+}
