@@ -1,0 +1,515 @@
+openapi: 3.0.3
+info:
+  title: Identity Resolution Service API
+  version: 0.1.0
+  description: |
+    Manages borrower identity resolution, cluster confidence, and manual review workflow.
+    All endpoints require OAuth2 client credentials with scopes documented per operation.
+servers:
+  - url: https://identity.api.credit-bureau.local/v1
+    description: Production
+  - url: https://identity.api.sandbox.credit-bureau.local/v1
+    description: Sandbox
+tags:
+  - name: Resolution
+    description: Resolve borrower identifiers into canonical entity IDs.
+  - name: Entities
+    description: Read borrower identity profiles.
+  - name: Clusters
+    description: Manage identity clusters and manual reviews.
+  - name: Flags
+    description: Flag potentially fraudulent or conflicting identities.
+paths:
+  /identities/resolve:
+    post:
+      tags: [Resolution]
+      summary: Resolve one or more identifiers into a borrower entity.
+      operationId: resolveIdentity
+      security:
+        - oauth2:
+            - identity.resolve
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveRequest'
+      responses:
+        '200':
+          description: Entity resolution succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveResponse'
+        '202':
+          description: Resolution requires manual review; payload queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualReviewResponse'
+        '400':
+          description: Invalid payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflicting identifiers were supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /identities/{entityId}:
+    get:
+      tags: [Entities]
+      summary: Retrieve an entity profile and identifiers.
+      operationId: getIdentity
+      security:
+        - oauth2:
+            - identity.read
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Entity profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+        '404':
+          description: Entity not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /identities/{entityId}/flags:
+    post:
+      tags: [Flags]
+      summary: Flag an entity for potential fraud or investigation.
+      operationId: flagIdentity
+      security:
+        - oauth2:
+            - identity.flag
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagRequest'
+      responses:
+        '201':
+          description: Flag recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '400':
+          description: Invalid payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Entity not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /identity-clusters/{clusterId}:
+    get:
+      tags: [Clusters]
+      summary: Inspect a cluster and linked entities/identifiers.
+      operationId: getCluster
+      security:
+        - oauth2:
+            - identity.review
+      parameters:
+        - $ref: '#/components/parameters/ClusterId'
+      responses:
+        '200':
+          description: Cluster retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '404':
+          description: Cluster not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /identity-clusters/{clusterId}/decisions:
+    post:
+      tags: [Clusters]
+      summary: Submit a manual review decision for a cluster.
+      operationId: submitClusterDecision
+      security:
+        - oauth2:
+            - identity.review
+      parameters:
+        - $ref: '#/components/parameters/ClusterId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClusterDecisionRequest'
+      responses:
+        '200':
+          description: Decision recorded and borrowers updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterDecisionResponse'
+        '400':
+          description: Invalid payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Cluster not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Cluster already decided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://idp.credit-bureau.local/oauth2/token
+          scopes:
+            identity.resolve: Resolve borrower identities.
+            identity.read: Read borrower identity profiles.
+            identity.flag: Create or view flags.
+            identity.review: Perform manual reviews.
+  parameters:
+    EntityId:
+      name: entityId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ClusterId:
+      name: clusterId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials.
+    Forbidden:
+      description: Authenticated but lacks required scope.
+    ServerError:
+      description: Unexpected server-side failure.
+  schemas:
+    ResolveRequest:
+      type: object
+      required: [identifiers]
+      properties:
+        identifiers:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/IdentifierInput'
+        attributes:
+          type: object
+          additionalProperties: true
+          description: Optional demographic/behavioral attributes (address, employer, etc.).
+    IdentifierInput:
+      type: object
+      required: [type, value]
+      properties:
+        type:
+          type: string
+          enum:
+            - national_id
+            - passport
+            - drivers_license
+            - voter_id
+            - tax_id
+            - phone
+            - email
+            - biometric_hash
+            - other
+        value:
+          type: string
+        issuedCountry:
+          type: string
+          description: ISO country code.
+        issuedAt:
+          type: string
+          format: date
+        expiresAt:
+          type: string
+          format: date
+        verificationStatus:
+          type: string
+          enum: [verified, pending, unverified]
+    ResolveResponse:
+      type: object
+      required: [entityId, confidence, matchStatus]
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        matchStatus:
+          type: string
+          enum: [matched, partial, new]
+        clusterId:
+          type: string
+          format: uuid
+        attributesMerged:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeMerge'
+    AttributeMerge:
+      type: object
+      properties:
+        attribute:
+          type: string
+        source:
+          type: string
+        value:
+          type: string
+    ManualReviewResponse:
+      type: object
+      required: [clusterId, reason]
+      properties:
+        clusterId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        slaHours:
+          type: integer
+    Identity:
+      type: object
+      required: [entityId, fullName, identifiers]
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        entityType:
+          type: string
+          enum: [individual, business]
+        fullName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+        nationality:
+          type: string
+        primaryPhone:
+          type: string
+        primaryEmail:
+          type: string
+        address:
+          type: object
+          additionalProperties: true
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+        riskFlags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Identifier:
+      allOf:
+        - $ref: '#/components/schemas/IdentifierInput'
+        - type: object
+          properties:
+            identifierId:
+              type: string
+              format: uuid
+            verified:
+              type: boolean
+    FlagRequest:
+      type: object
+      required: [code, description]
+      properties:
+        code:
+          type: string
+          enum: [fraud_suspected, duplicate_id, watch_list, other]
+        description:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    FlagResponse:
+      type: object
+      properties:
+        flagId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Cluster:
+      type: object
+      required: [clusterId, confidence, resolutionStatus]
+      properties:
+        clusterId:
+          type: string
+          format: uuid
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        resolutionStatus:
+          type: string
+          enum: [auto, pending_review, approved, rejected]
+        reviewer:
+          type: string
+        reviewedAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterEntity'
+    ClusterEntity:
+      type: object
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        matchScore:
+          type: number
+          minimum: 0
+          maximum: 1
+        attributes:
+          type: object
+          additionalProperties: true
+    ClusterDecisionRequest:
+      type: object
+      required: [decision, rationale]
+      properties:
+        decision:
+          type: string
+          enum: [approve_link, split, reject]
+        rationale:
+          type: string
+        updates:
+          type: array
+          description: Instructions to reassign identifiers/entities.
+          items:
+            type: object
+            properties:
+              entityId:
+                type: string
+                format: uuid
+              outcome:
+                type: string
+                enum: [retain, remove, new_entity]
+    ClusterDecisionResponse:
+      type: object
+      properties:
+        clusterId:
+          type: string
+          format: uuid
+        decision:
+          type: string
+        resolvedEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterEntity'
+        updatedAt:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+    ConflictError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            conflicts:
+              type: array
+              items:
+                type: object
+                properties:
+                  identifierType:
+                    type: string
+                  identifierValue:
+                    type: string
+                  reason:
+                    type: string
