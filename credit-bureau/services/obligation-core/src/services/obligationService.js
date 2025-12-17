@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { getRepository } from '../repositories/index.js';
+import { publishObligationEvent } from '../events/kafkaPublisher.js';
 import {
   validateObligationPayload,
   validateStatus,
@@ -11,6 +12,17 @@ function buildError(message, details, statusCode = 400) {
   error.statusCode = statusCode;
   error.details = details;
   return error;
+}
+
+async function emitEvent(eventType, payload) {
+  try {
+    await publishObligationEvent(eventType, {
+      eventId: crypto.randomUUID(),
+      ...payload
+    });
+  } catch (error) {
+    console.error('Failed to publish obligation event', error);
+  }
 }
 
 export async function createObligation(payload = {}) {
@@ -32,6 +44,16 @@ export async function createObligation(payload = {}) {
     maturityDate: payload.maturityDate,
     collateral: payload.collateral,
     purpose: payload.purpose
+  });
+  await emitEvent('obligation.created', {
+    obligationId: obligation.obligationId,
+    entityId: obligation.entityId,
+    institutionId: obligation.institutionId,
+    status: obligation.status,
+    productType: obligation.productType,
+    principalAmount: obligation.principalAmount,
+    currency: obligation.currency,
+    disbursedAt: obligation.disbursedAt
   });
   return obligation;
 }
@@ -55,6 +77,12 @@ export async function updateObligationStatus(obligationId, status) {
   if (!updated) {
     throw buildError('Obligation not found', [], 404);
   }
+  await emitEvent('obligation.status_updated', {
+    obligationId: updated.obligationId,
+    entityId: updated.entityId,
+    institutionId: updated.institutionId,
+    status: updated.status
+  });
   return updated;
 }
 
@@ -73,6 +101,15 @@ export async function recordRepayment(obligationId, payload = {}) {
     paymentDate: payload.paymentDate,
     currency: payload.currency || obligation.currency,
     channel: payload.channel
+  });
+  await emitEvent('obligation.repayment_recorded', {
+    obligationId: obligationId,
+    entityId: obligation.entityId,
+    institutionId: obligation.institutionId,
+    amount: repayment.amount,
+    paymentDate: repayment.paymentDate,
+    currency: repayment.currency,
+    channel: repayment.channel
   });
   return repayment;
 }

@@ -18,5 +18,19 @@ export const config = {
     password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE,
     ssl: process.env.PGSSLMODE === 'require'
+  },
+  kafka: {
+    enabled: !isTest && Boolean((process.env.KAFKA_BROKERS || '').trim()),
+    brokers: (process.env.KAFKA_BROKERS || '')
+      .split(',')
+      .map((broker) => broker.trim())
+      .filter(Boolean),
+    clientId: process.env.KAFKA_CLIENT_ID || 'score-service',
+    groupId: process.env.KAFKA_GROUP_ID || 'score-service-group',
+    obligationTopic: process.env.KAFKA_OBLIGATION_TOPIC || 'obligation-events',
+    fromBeginning: process.env.KAFKA_FROM_BEGINNING === 'true'
+  },
+  scoring: {
+    defaultModelVersion: process.env.SCORE_MODEL_VERSION || 'v1'
   }
 };

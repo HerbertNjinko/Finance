@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: Obligation Core API
+  version: 0.1.0
+  description: Manage obligations, statuses, and repayments.
+servers:
+  - url: https://obligation.api.credit-bureau.local/v1
+paths:
+  /obligations:
+    get:
+      summary: List obligations
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: entityId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: institutionId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated obligations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObligationList'
+    post:
+      summary: Create obligation
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObligationInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Obligation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /obligations/{obligationId}:
+    get:
+      summary: Fetch obligation
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObligationId'
+      responses:
+        '200':
+          description: Obligation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Obligation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /obligations/{obligationId}/status:
+    patch:
+      summary: Update obligation status
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObligationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [active, closed, defaulted, written_off]
+      responses:
+        '200':
+          description: Updated obligation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Obligation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /obligations/{obligationId}/repayments:
+    post:
+      summary: Record repayment
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObligationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepaymentInput'
+      responses:
+        '201':
+          description: Repayment stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repayment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    ObligationId:
+      name: obligationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid payload
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    ObligationInput:
+      type: object
+      required: [institutionId, entityId, productType, principalAmount, currency, disbursedAt]
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        productType:
+          type: string
+        principalAmount:
+          type: number
+        currency:
+          type: string
+        interestRate:
+          type: number
+        disbursedAt:
+          type: string
+          format: date
+        maturityDate:
+          type: string
+          format: date
+        collateral:
+          type: object
+        purpose:
+          type: string
+    Obligation:
+      allOf:
+        - $ref: '#/components/schemas/ObligationInput'
+        - type: object
+          properties:
+            obligationId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+            repayments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Repayment'
+    ObligationList:
+      type: object
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Obligation'
+    RepaymentInput:
+      type: object
+      required: [amount, paymentDate, channel]
+      properties:
+        amount:
+          type: number
+        paymentDate:
+          type: string
+          format: date
+        currency:
+          type: string
+        channel:
+          type: string
+    Repayment:
+      allOf:
+        - $ref: '#/components/schemas/RepaymentInput'
+        - type: object
+          properties:
+            repaymentId:
+              type: string
+              format: uuid
+            recordedAt:
+              type: string
+              format: date-time
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Ingestion Gateway API
+  version: 0.1.0
+  description: Submit obligations and repayment batches from partner institutions.
+servers:
+  - url: https://ingestion.api.credit-bureau.local/v1
+paths:
+  /submissions/obligations:
+    post:
+      summary: Submit a batch of obligations
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionEnvelope'
+      responses:
+        '202':
+          description: Submission accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionAck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /submissions/payments:
+    post:
+      summary: Submit a batch of repayments
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionEnvelope'
+      responses:
+        '202':
+          description: Submission accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionAck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /submissions/{submissionId}:
+    get:
+      summary: Retrieve submission status
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '200':
+          description: Submission payload with item statuses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    SubmissionId:
+      name: submissionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    SubmissionEnvelope:
+      type: object
+      required:
+        - institutionId
+        - batchReference
+        - records
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        institutionId:
+          type: string
+          format: uuid
+        batchReference:
+          type: string
+        records:
+          type: array
+          items:
+            type: object
+            description: Obligation or repayment record depending on endpoint.
+    SubmissionAck:
+      type: object
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        submissionType:
+          type: string
+        status:
+          type: string
+        acceptedRecords:
+          type: integer
+        rejectedRecords:
+          type: integer
+    Submission:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/SubmissionAck'
+        - type: object
+          properties:
+            records:
+              type: array
+              items:
+                type: object
+                properties:
+                  recordId:
+                    type: string
+                    format: uuid
+                  referenceId:
+                    type: string
+                  status:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

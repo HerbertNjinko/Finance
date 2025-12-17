@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info:
+  title: Score Service API
+  version: 0.1.0
+  description: Retrieve and recalculate borrower credit scores.
+servers:
+  - url: https://score.api.credit-bureau.local/v1
+paths:
+  /scores/{entityId}:
+    get:
+      summary: Get latest score for an entity
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Score document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Score'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scores/recalculate:
+    post:
+      summary: Trigger a recalculation
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecalcInput'
+      responses:
+        '200':
+          description: Recalculated score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Score'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  responses:
+    NotFound:
+      description: Score missing
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Score:
+      type: object
+      properties:
+        scoreId:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        score:
+          type: integer
+        riskTier:
+          type: string
+        adverseReasons:
+          type: array
+          items:
+            type: string
+        calculatedAt:
+          type: string
+          format: date-time
+    RecalcInput:
+      type: object
+      required: [entityId, modelVersion]
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        factors:
+          type: object
+          additionalProperties: true
+        adverseReasons:
+          type: array
+          items:
+            type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

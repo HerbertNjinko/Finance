@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: Dispute Service API
+  version: 0.1.0
+  description: Track borrower disputes and workflow status.
+servers:
+  - url: https://dispute.api.credit-bureau.local/v1
+paths:
+  /disputes:
+    get:
+      summary: List disputes
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: entityId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching disputes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dispute'
+    post:
+      summary: Create dispute
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /disputes/{disputeId}:
+    get:
+      summary: Fetch dispute
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+      responses:
+        '200':
+          description: Dispute payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update dispute
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeUpdate'
+      responses:
+        '200':
+          description: Updated dispute
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    DisputeId:
+      name: disputeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Dispute not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    DisputeInput:
+      type: object
+      required: [entityId, channel, reason]
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        obligationId:
+          type: string
+          format: uuid
+        submittedBy:
+          type: string
+          format: uuid
+        channel:
+          type: string
+        reason:
+          type: string
+        dueAt:
+          type: string
+          format: date-time
+    DisputeUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, pending, resolved, rejected, closed]
+        resolutionSummary:
+          type: string
+        dueAt:
+          type: string
+          format: date-time
+    Dispute:
+      allOf:
+        - $ref: '#/components/schemas/DisputeInput'
+        - type: object
+          properties:
+            disputeId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            openedAt:
+              type: string
+              format: date-time
+            closedAt:
+              type: string
+              format: date-time
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

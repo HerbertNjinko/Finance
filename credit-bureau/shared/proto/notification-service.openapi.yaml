@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  version: 0.1.0
+  description: Manage notification templates and queue notification events.
+servers:
+  - url: https://notification.api.credit-bureau.local/v1
+paths:
+  /notification-templates:
+    get:
+      summary: List templates
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Template list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Template'
+    post:
+      summary: Create template
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateInput'
+      responses:
+        '201':
+          description: Created template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /notifications:
+    post:
+      summary: Enqueue notification
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationInput'
+      responses:
+        '202':
+          description: Notification queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  responses:
+    BadRequest:
+      description: Invalid payload
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    TemplateInput:
+      type: object
+      required: [name, channel, locale, body]
+      properties:
+        name:
+          type: string
+        channel:
+          type: string
+          enum: [sms, email]
+        locale:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+    Template:
+      allOf:
+        - $ref: '#/components/schemas/TemplateInput'
+        - type: object
+          properties:
+            templateId:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+    NotificationInput:
+      type: object
+      required: [channel, destination]
+      properties:
+        templateId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+        destination:
+          type: string
+        body:
+          type: string
+        mergeVariables:
+          type: object
+          additionalProperties: true
+    Notification:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        templateId:
+          type: string
+          format: uuid
+        destination:
+          type: string
+        channel:
+          type: string
+        payload:
+          type: object
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

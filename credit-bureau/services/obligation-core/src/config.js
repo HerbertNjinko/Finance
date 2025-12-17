@@ -18,5 +18,14 @@ export const config = {
     password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE,
     ssl: process.env.PGSSLMODE === 'require'
+  },
+  kafka: {
+    enabled: !isTest && Boolean((process.env.KAFKA_BROKERS || '').trim()),
+    brokers: (process.env.KAFKA_BROKERS || '')
+      .split(',')
+      .map((broker) => broker.trim())
+      .filter(Boolean),
+    clientId: process.env.KAFKA_CLIENT_ID || 'obligation-core',
+    eventTopic: process.env.KAFKA_OBLIGATION_TOPIC || 'obligation-events'
   }
 };

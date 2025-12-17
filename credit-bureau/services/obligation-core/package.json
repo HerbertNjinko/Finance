@@ -5,9 +5,11 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "NODE_ENV=development node src/index.js",
-    "test": "NODE_ENV=test node --test"
+    "test": "NODE_ENV=test node --test",
+    "test:integration": "RUN_INTEGRATION_TESTS=1 NODE_ENV=test node --test tests/integration"
   },
   "dependencies": {
+    "kafkajs": "^2.2.4",
     "pg": "^8.16.3"
   }
 }

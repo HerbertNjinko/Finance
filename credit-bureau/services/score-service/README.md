@@ -1,6 +1,6 @@
 ## Score Service
 
-Calculates and serves borrower credit scores stored in `core.credit_scores`. Supports retrieving the latest score for an entity and triggering recalculation events (heuristic scoring for now; swap with production model later).
+Calculates and serves borrower credit scores stored in `core.credit_scores`. Supports retrieving the latest score for an entity, triggering recalculation events (heuristic scoring for now; swap with production model later), and consuming Kafka obligation events to auto-refresh scores.
 
 ### Install
 
@@ -17,7 +17,7 @@ source .env
 npm start
 ```
 
-Important env vars: `SCORE_API_KEYS`, `PG*`.
+Important env vars: `SCORE_API_KEYS`, `PG*`, `KAFKA_*`, `SCORE_MODEL_VERSION`.
 
 ### Test
 
