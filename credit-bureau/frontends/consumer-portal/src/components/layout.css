@@ -1,0 +1,41 @@
+:root {
+  font-family: 'Inter', sans-serif;
+}
+
+.layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+}
+
+aside {
+  background: #0f172a;
+  color: #fff;
+  padding: 24px;
+}
+
+aside h1 {
+  font-size: 1.3rem;
+  margin-bottom: 24px;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+nav a {
+  color: #cbd5f5;
+  text-decoration: none;
+}
+
+nav a.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+main {
+  padding: 32px;
+  background: #f8fafc;
+}

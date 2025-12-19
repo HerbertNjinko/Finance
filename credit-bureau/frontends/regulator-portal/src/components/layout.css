@@ -1,0 +1,37 @@
+.layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  font-family: 'Inter', sans-serif;
+}
+
+aside {
+  background: #0b3d60;
+  color: #fff;
+  padding: 28px 18px;
+}
+
+aside h1 {
+  margin: 0 0 24px;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+nav a {
+  color: #cbd5f5;
+  text-decoration: none;
+}
+
+nav a.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+main {
+  padding: 32px;
+  background: #f5f6fa;
+}
