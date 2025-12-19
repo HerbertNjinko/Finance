@@ -1,6 +1,6 @@
 import { Kafka, logLevel } from 'kafkajs';
 import { config } from '../config.js';
-import { handleIncomingEvent } from '../services/eventNotificationService.js';
+import { handleIncomingEvent } from '../services/notificationService.js';
 
 let consumer;
 

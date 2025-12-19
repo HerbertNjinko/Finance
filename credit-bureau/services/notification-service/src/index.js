@@ -1,3 +1,4 @@
+import '../../../shared/lib/loadEnv.js';
 import { createServer } from './http/server.js';
 import { closeRepository } from './repositories/index.js';
 import { startNotificationConsumer, stopNotificationConsumer } from './events/eventConsumer.js';

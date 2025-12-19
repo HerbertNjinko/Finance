@@ -1,3 +1,4 @@
+import '../../../shared/lib/loadEnv.js';
 import { createServer } from './http/server.js';
 
 const PORT = process.env.PORT || 4001;

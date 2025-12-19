@@ -1,3 +1,4 @@
+import '../../../shared/lib/loadEnv.js';
 import { createServer } from './http/server.js';
 import { closeRepository } from './repositories/index.js';
 import { closeProducer } from './events/kafkaPublisher.js';

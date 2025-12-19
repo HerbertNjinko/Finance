@@ -1,0 +1,48 @@
+{
+  "institutionId": "11111111-1111-1111-1111-111111111111",
+  "batchReference": "BATCH-2024-07-01",
+  "records": [
+    {
+      "referenceId": "OBL-2024-001",
+      "entity": {
+        "entityId": "22222222-2222-2222-2222-222222222221"
+      },
+      "obligation": {
+        "productType": "installment_loan",
+        "principalAmount": 5000000,
+        "currency": "XAF",
+        "interestRate": 0.14,
+        "disbursedAt": "2024-05-15",
+        "maturityDate": "2026-05-15"
+      }
+    },
+    {
+      "referenceId": "OBL-2024-002",
+      "entity": {
+        "entityId": "22222222-2222-2222-2222-222222222222"
+      },
+      "obligation": {
+        "productType": "credit_card",
+        "principalAmount": 1200000,
+        "currency": "XAF",
+        "interestRate": 0.21,
+        "disbursedAt": "2023-11-01",
+        "maturityDate": "2025-11-01"
+      }
+    },
+    {
+      "referenceId": "OBL-2024-003",
+      "entity": {
+        "entityId": "22222222-2222-2222-2222-222222222223"
+      },
+      "obligation": {
+        "productType": "mobile_money",
+        "principalAmount": 350000,
+        "currency": "XAF",
+        "interestRate": 0.18,
+        "disbursedAt": "2024-06-10",
+        "maturityDate": "2024-12-10"
+      }
+    }
+  ]
+}

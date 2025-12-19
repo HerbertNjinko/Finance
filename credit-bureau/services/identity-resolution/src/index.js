@@ -1,3 +1,4 @@
+import '../../../shared/lib/loadEnv.js';
 import { createServer } from './http/server.js';
 import { startIngestionConsumer, stopIngestionConsumer } from './events/ingestionConsumer.js';
 import { closeIdentityStore } from './store/index.js';

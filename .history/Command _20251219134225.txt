@@ -1,0 +1,23 @@
+API GATE WAY = cd Finance/credit-bureau/services/api-gateway$ 
+ Command = PORT=4205 HOST=0.0.0.0 npm start
+
+Consumer-portal= /Finance/credit-bureau/frontends/consumer-portal
+Command = VITE_API_GATEWAY_URL=http://192.168.47.180:4100 npm run dev -- --host 0.0.0.0
+
+Institution-portal= /Finance/credit-bureau/frontends/institution-portal
+Command=mVITE_API_GATEWAY_URL=http://192.168.47.180:4205 VITE_GATEWAY_KEY=local-gateway-key npm run dev -- --host 0.0.0.0
+
+Regulator-portal= Finance/credit-bureau/frontends/regulator-portal
+Command= VITE_API_GATEWAY_URL=http://192.168.47.180:4100 \
+VITE_GATEWAY_KEY=local-gateway-key \
+npm run dev -- --host 0.0.0.0
+
+Services
+
+/Finance/credit-bureau/services/obligation-core
+/Finance/credit-bureau/services/dispute-service
+/Finance/credit-bureau/services/ingestion-gateway
+/Finance/credit-bureau/services/identity-resolution
+/Finance/credit-bureau/services/notification-service
+
+Command = npm start
