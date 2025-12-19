@@ -1,9 +1,9 @@
 {
-  "name": "$portal",
+  "name": "institution-portal",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0 --port ${VITE_PORT:-4210}",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

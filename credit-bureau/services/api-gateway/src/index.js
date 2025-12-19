@@ -1,10 +1,11 @@
 import { createServer } from './http/server.js';
 
 const PORT = process.env.PORT || 4100;
+const HOST = process.env.HOST || '127.0.0.1';
 const server = createServer();
 
-server.listen(PORT, () => {
-  console.log(`API Gateway listening on port ${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`API Gateway listening on http://${HOST}:${PORT}`);
 });
 
 function shutdown(signal) {

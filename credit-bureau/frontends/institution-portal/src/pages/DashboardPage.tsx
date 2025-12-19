@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StatsCard } from '../components/StatsCard';
 import './dashboard.css';
 
@@ -17,6 +18,32 @@ const delinquencyMetrics = [
 ];
 
 export function DashboardPage() {
+  const [isDownloading, setDownloading] = useState(false);
+
+  const handleDailyReport = async () => {
+    try {
+      setDownloading(true);
+      const response = await fetch('/api/reports/daily', {
+        headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to download');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `daily-report-${new Date().toISOString().split('T')[0]}.csv`;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert('Unable to download report.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <section className="dashboard">
       <header>
@@ -24,7 +51,9 @@ export function DashboardPage() {
           <h2>Institution snapshot</h2>
           <p>Monitor submissions, score lookups, and delinquency exposures in one place.</p>
         </div>
-        <button type="button">Download daily report</button>
+        <button type="button" onClick={handleDailyReport} disabled={isDownloading}>
+          {isDownloading ? 'Preparing...' : 'Download daily report'}
+        </button>
       </header>
 
       <h3>Submissions</h3>
