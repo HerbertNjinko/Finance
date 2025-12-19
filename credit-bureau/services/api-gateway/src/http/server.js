@@ -8,6 +8,8 @@ const routes = [
   { prefix: '/identities', upstream: 'identity' },
   { prefix: '/identity-clusters', upstream: 'identity' },
   { prefix: '/obligations', upstream: 'obligation' },
+  { prefix: '/repayments', upstream: 'obligation' },
+  { prefix: '/institutions', upstream: 'obligation' },
   { prefix: '/scores', upstream: 'score' },
   { prefix: '/notifications', upstream: 'notification' },
   { prefix: '/disputes', upstream: 'dispute' }

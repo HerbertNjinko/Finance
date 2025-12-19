@@ -4,7 +4,8 @@ import './layout.css';
 const nav = [
   { to: '/', label: 'Dashboard' },
   { to: '/obligations', label: 'Obligations' },
-  { to: '/disputes', label: 'Disputes' }
+  { to: '/disputes', label: 'Disputes' },
+  { to: '/institutions', label: 'Institutions' }
 ];
 
 export function AppLayout({ title }: { title: string }) {

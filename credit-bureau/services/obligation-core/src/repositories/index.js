@@ -1,25 +1,41 @@
 import { config } from '../config.js';
 import { InMemoryObligationRepository } from './inMemoryRepository.js';
 import { PostgresObligationRepository } from './postgresRepository.js';
+import { InMemoryInstitutionRepository } from './inMemoryInstitutionRepository.js';
+import { PostgresInstitutionRepository } from './postgresInstitutionRepository.js';
 
-let repository;
+let obligationRepository;
+let institutionRepository;
 
 export function getRepository() {
-  if (!repository) {
-    repository = config.db.enabled
+  if (!obligationRepository) {
+    obligationRepository = config.db.enabled
       ? new PostgresObligationRepository()
       : new InMemoryObligationRepository();
   }
-  return repository;
+  return obligationRepository;
 }
 
 export function overrideRepository(instance) {
-  repository = instance;
+  obligationRepository = instance;
+}
+
+export function getInstitutionRepository() {
+  if (!institutionRepository) {
+    institutionRepository = config.db.enabled
+      ? new PostgresInstitutionRepository()
+      : new InMemoryInstitutionRepository();
+  }
+  return institutionRepository;
 }
 
 export async function closeRepository() {
-  if (repository?.close) {
-    await repository.close();
+  if (obligationRepository?.close) {
+    await obligationRepository.close();
   }
-  repository = null;
+  obligationRepository = null;
+  if (institutionRepository?.close) {
+    await institutionRepository.close();
+  }
+  institutionRepository = null;
 }

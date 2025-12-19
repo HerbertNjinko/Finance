@@ -26,6 +26,8 @@ function mapRepayment(row) {
   return {
     repaymentId: row.repayment_id,
     obligationId: row.obligation_id,
+    institutionId: row.institution_id,
+    entityId: row.entity_id,
     paymentDate: row.payment_date ? row.payment_date.toISOString().slice(0, 10) : null,
     amount: Number(row.amount),
     currency: row.currency,
@@ -146,9 +148,38 @@ export class PostgresObligationRepository {
 
   async getRepayments(obligationId) {
     const result = await this.pool.query(
-      `SELECT * FROM core.repayments WHERE obligation_id = $1 ORDER BY payment_date DESC`,
+      `SELECT r.*, o.institution_id, o.entity_id
+         FROM core.repayments r
+         JOIN core.obligations o ON o.obligation_id = r.obligation_id
+        WHERE r.obligation_id = $1
+        ORDER BY r.payment_date DESC`,
       [obligationId]
     );
+    return result.rows.map(mapRepayment);
+  }
+
+  async listRepayments({ obligationId, institutionId, limit = 25 }) {
+    const clauses = [];
+    const params = [];
+    if (obligationId) {
+      params.push(obligationId);
+      clauses.push(`r.obligation_id = $${params.length}`);
+    }
+    if (institutionId) {
+      params.push(institutionId);
+      clauses.push(`o.institution_id = $${params.length}`);
+    }
+    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    params.push(limit);
+    const query = `
+      SELECT r.*, o.institution_id, o.entity_id
+        FROM core.repayments r
+        JOIN core.obligations o ON o.obligation_id = r.obligation_id
+        ${where}
+        ORDER BY r.payment_date DESC, r.reported_at DESC
+        LIMIT $${params.length}
+    `;
+    const result = await this.pool.query(query, params);
     return result.rows.map(mapRepayment);
   }
 }

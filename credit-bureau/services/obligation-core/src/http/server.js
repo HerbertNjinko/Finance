@@ -6,8 +6,15 @@ import {
   getObligationHandler,
   updateStatusHandler,
   recordRepaymentHandler,
-  listObligationsHandler
+  listObligationsHandler,
+  listRepaymentsHandler
 } from '../controllers/obligationController.js';
+import {
+  createInstitutionHandler,
+  listInstitutionsHandler,
+  updateInstitutionHandler,
+  deleteInstitutionHandler
+} from '../controllers/institutionController.js';
 
 const routes = [
   { method: 'POST', pattern: /^\/v1\/obligations$/, handler: createObligationHandler },
@@ -22,7 +29,12 @@ const routes = [
     method: 'POST',
     pattern: /^\/v1\/obligations\/([0-9a-fA-F-]{36})\/repayments$/,
     handler: recordRepaymentHandler
-  }
+  },
+  { method: 'GET', pattern: /^\/v1\/repayments$/, handler: listRepaymentsHandler },
+  { method: 'GET', pattern: /^\/v1\/institutions$/, handler: listInstitutionsHandler },
+  { method: 'POST', pattern: /^\/v1\/institutions$/, handler: createInstitutionHandler },
+  { method: 'PATCH', pattern: /^\/v1\/institutions\/([0-9a-fA-F-]{36})$/, handler: updateInstitutionHandler },
+  { method: 'DELETE', pattern: /^\/v1\/institutions\/([0-9a-fA-F-]{36})$/, handler: deleteInstitutionHandler }
 ];
 
 function jsonResponse(res, statusCode, payload) {

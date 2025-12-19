@@ -10,12 +10,26 @@ type Obligation = {
   nextDueDate?: string;
 };
 
+type Repayment = {
+  repaymentId: string;
+  obligationId: string;
+  paymentDate: string | null;
+  amount: number;
+  currency: string;
+  channel?: string | null;
+};
+
 export function ObligationsPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadType, setUploadType] = useState<'obligations' | 'payments'>('obligations');
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [repayments, setRepayments] = useState<Repayment[]>([]);
+  const [repaymentsLoading, setRepaymentsLoading] = useState(true);
+  const [repaymentsError, setRepaymentsError] = useState<string | null>(null);
+  const institutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
 
   useEffect(() => {
     const fetchObligations = async () => {
@@ -38,6 +52,29 @@ export function ObligationsPage() {
     fetchObligations();
   }, []);
 
+  useEffect(() => {
+    const fetchRepayments = async () => {
+      setRepaymentsLoading(true);
+      setRepaymentsError(null);
+      try {
+        const response = await fetch(`/api/repayments?institutionId=${encodeURIComponent(institutionId)}`, {
+          headers: {
+            'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? ''
+          }
+        });
+        if (!response.ok) throw new Error('Failed to load repayments');
+        const data = await response.json();
+        setRepayments(data.items || []);
+      } catch (error) {
+        console.error(error);
+        setRepaymentsError('Unable to fetch repayments');
+      } finally {
+        setRepaymentsLoading(false);
+      }
+    };
+    fetchRepayments();
+  }, [institutionId]);
+
   const totals = useMemo(() => {
     const outstanding = obligations.reduce((sum, item) => sum + (item.principalAmount || 0), 0);
     const delinquent = obligations.filter((item) => item.status === 'delinquent').length;
@@ -52,12 +89,25 @@ export function ObligationsPage() {
     try {
       setUploading(true);
       const text = await selectedFile.text();
+      let records: unknown;
+      try {
+        records = JSON.parse(text);
+        if (!Array.isArray(records)) {
+          throw new Error('JSON is not an array of records');
+        }
+      } catch (jsonError) {
+        console.error(jsonError);
+        alert('Invalid JSON structure. Please provide an array of records.');
+        return;
+      }
       const payload = {
-        institutionId: '11111111-1111-1111-1111-111111111111',
-        batchReference: `UPLOAD-${Date.now()}`,
-        records: JSON.parse(text)
+        institutionId,
+        batchReference: `${uploadType.toUpperCase()}-${Date.now()}`,
+        records
       };
-      const response = await fetch('/api/submissions/obligations', {
+      const submissionPath =
+        uploadType === 'payments' ? '/api/submissions/payments' : '/api/submissions/obligations';
+      const response = await fetch(submissionPath, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +116,7 @@ export function ObligationsPage() {
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Upload failed');
-      alert('Submission sent successfully.');
+      alert(`${uploadType === 'payments' ? 'Payment' : 'Obligation'} batch submitted successfully.`);
       setShowUpload(false);
       setSelectedFile(null);
     } catch (error) {
@@ -136,10 +186,67 @@ export function ObligationsPage() {
         </tbody>
       </table>
 
+      <section className="card mt-32">
+        <header className="table-header">
+          <div>
+            <h3>Recent repayments</h3>
+            <p>Latest repayments reported across this institution.</p>
+          </div>
+        </header>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Obligation</th>
+              <th>Amount</th>
+              <th>Channel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {repaymentsLoading && (
+              <tr>
+                <td colSpan={4}>Loading repayments…</td>
+              </tr>
+            )}
+            {!repaymentsLoading && repaymentsError && (
+              <tr>
+                <td colSpan={4}>{repaymentsError}</td>
+              </tr>
+            )}
+            {!repaymentsLoading && !repaymentsError && repayments.length === 0 && (
+              <tr>
+                <td colSpan={4}>No repayments reported yet.</td>
+              </tr>
+            )}
+            {repayments.map((repayment) => (
+              <tr key={repayment.repaymentId}>
+                <td>{repayment.paymentDate ?? '—'}</td>
+                <td>{repayment.obligationId.slice(0, 8)}</td>
+                <td>
+                  {repayment.amount?.toLocaleString()} {repayment.currency}
+                </td>
+                <td>{repayment.channel ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
       {showUpload && (
         <div className="modal">
           <div className="modal__content">
             <h3>Upload JSON batch</h3>
+            <label>
+              Batch type
+              <select value={uploadType} onChange={(event) => setUploadType(event.target.value as 'obligations' | 'payments')}>
+                <option value="obligations">Obligation records</option>
+                <option value="payments">Repayment records</option>
+              </select>
+            </label>
+            <p className="text-muted">
+              Upload an array of {uploadType === 'payments' ? 'repayment' : 'obligation'} objects. Each submission will be
+              wrapped with your institution identifier automatically.
+            </p>
             <input type="file" accept="application/json" onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} />
             <div className="modal__actions">
               <button type="button" onClick={() => setShowUpload(false)}>

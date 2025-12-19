@@ -3,7 +3,8 @@ import {
   getObligationById,
   updateObligationStatus,
   recordRepayment,
-  listObligations
+  listObligations,
+  listRepayments
 } from '../services/obligationService.js';
 
 export async function createObligationHandler({ body }) {
@@ -29,4 +30,9 @@ export async function recordRepaymentHandler({ params, body }) {
 export async function listObligationsHandler({ query }) {
   const result = await listObligations(query);
   return { statusCode: 200, body: result };
+}
+
+export async function listRepaymentsHandler({ query }) {
+  const repayments = await listRepayments(query);
+  return { statusCode: 200, body: { items: repayments } };
 }

@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import { getSubmissionRepository } from '../store/index.js';
+import { persistObligations } from '../processors/obligationWriter.js';
+import { persistPayments } from '../processors/paymentWriter.js';
 import { validateSubmissionEnvelope, validateObligationRecord, validatePaymentRecord } from '../validation/validators.js';
 import { publishSubmission } from '../clients/kafkaClient.js';
 
@@ -48,7 +50,11 @@ export async function createObligationSubmission(payload = {}) {
   submission.records = payload.records.map((record) => buildRecord(record, validateObligationRecord));
   submission.acceptedRecords = submission.records.filter((r) => r.status === 'accepted').length;
   submission.rejectedRecords = submission.records.length - submission.acceptedRecords;
-  return persistAndNotify(submission);
+  const persisted = await persistAndNotify(submission);
+  await persistObligations(persisted).catch((error) => {
+    console.error('Failed to propagate obligations from submission', error);
+  });
+  return persisted;
 }
 
 export async function createPaymentSubmission(payload = {}) {
@@ -63,7 +69,11 @@ export async function createPaymentSubmission(payload = {}) {
   submission.records = payload.records.map((record) => buildRecord(record, validatePaymentRecord));
   submission.acceptedRecords = submission.records.filter((r) => r.status === 'accepted').length;
   submission.rejectedRecords = submission.records.length - submission.acceptedRecords;
-  return persistAndNotify(submission);
+  const persisted = await persistAndNotify(submission);
+  await persistPayments(persisted).catch((error) => {
+    console.error('Failed to persist payments from submission', error);
+  });
+  return persisted;
 }
 
 export async function getSubmissionById(submissionId) {

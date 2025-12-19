@@ -109,3 +109,20 @@
   justify-content: flex-end;
   gap: 12px;
 }
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 15px 30px -18px rgba(15, 23, 42, 0.3);
+}
+
+.mt-32 {
+  margin-top: 32px;
+}
+
+.text-muted {
+  font-size: 0.85rem;
+  color: #475467;
+  margin: 8px 0;
+}

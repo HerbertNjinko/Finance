@@ -66,4 +66,21 @@ export class InMemoryObligationRepository {
   async getRepayments(obligationId) {
     return this.repayments.get(obligationId) || [];
   }
+
+  async listRepayments({ obligationId, institutionId, limit = 25 }) {
+    let items = [];
+    if (obligationId) {
+      items = this.repayments.get(obligationId) || [];
+    } else {
+      for (const [id, payments] of this.repayments.entries()) {
+        const obligation = this.obligations.get(id);
+        if (institutionId && obligation?.institutionId !== institutionId) {
+          continue;
+        }
+        items = items.concat(payments.map((payment) => ({ ...payment, institutionId: obligation?.institutionId, entityId: obligation?.entityId })));
+      }
+    }
+    items.sort((a, b) => (b.paymentDate || '').localeCompare(a.paymentDate || ''));
+    return items.slice(0, limit);
+  }
 }

@@ -6,5 +6,7 @@
     "start": "node src/index.js",
     "dev": "NODE_ENV=development node src/index.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "cors": "^2.8.5"
+  }
 }
