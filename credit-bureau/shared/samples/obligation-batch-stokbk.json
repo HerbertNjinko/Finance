@@ -16,7 +16,7 @@
       ]
     },
     "obligation": {
-      "obligationId": "a5f4fa55-2f16-44d5-912d-3ede6324c0b6",
+      "obligationId": "d1a5bc49-2c42-46ce-9c2a-7c0b129ba2df",
       "productType": "installment_loan",
       "principalAmount": 3200000,
       "currency": "XAF",
@@ -46,7 +46,7 @@
       ]
     },
     "obligation": {
-      "obligationId": "f0f2d1be-95f3-4c8f-b0d4-e2c7aa8fcb60",
+      "obligationId": "e8f6c7a2-3baf-4a0b-8f8e-2b5c9f7a1d33",
       "productType": "revolving_credit",
       "principalAmount": 1800000,
       "currency": "XAF",
@@ -74,7 +74,7 @@
       ]
     },
     "obligation": {
-      "obligationId": "e3e6f963-fb41-4d9c-86a9-c9192385d93c",
+      "obligationId": "f3cbdb9d-b88b-4f71-9f0d-9f5472c7d2d9",
       "productType": "installment_loan",
       "principalAmount": 3600000,
       "currency": "XAF",

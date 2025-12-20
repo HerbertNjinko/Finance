@@ -222,4 +222,3 @@ ALTER TABLE core.obligations
   ADD COLUMN past_due_amount NUMERIC(18,2),
   ADD COLUMN next_due_date DATE;
 
-select institution_id, count(*) from core.obligations group by 1;

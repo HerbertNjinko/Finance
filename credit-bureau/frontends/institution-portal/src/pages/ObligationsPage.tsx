@@ -39,7 +39,9 @@ export function ObligationsPage() {
   const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  const institutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
+  const defaultInstitutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>(defaultInstitutionId);
+  const institutionId = selectedInstitutionId;
 
   useEffect(() => {
     const fetchInstitutions = async () => {
@@ -161,7 +163,7 @@ export function ObligationsPage() {
         return;
       }
       const payload = {
-        institutionId,
+        institutionId: selectedInstitutionId,
         batchReference: `${uploadType.toUpperCase()}-${Date.now()}`,
         records
       };
@@ -334,6 +336,16 @@ export function ObligationsPage() {
         <div className="modal">
           <div className="modal__content">
             <h3>Upload JSON batch</h3>
+            <label>
+              Institution to submit as
+              <select value={selectedInstitutionId} onChange={(e) => setSelectedInstitutionId(e.target.value)}>
+                {Object.entries(institutions).map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>
               Batch type
               <select value={uploadType} onChange={(event) => setUploadType(event.target.value as 'obligations' | 'payments')}>
