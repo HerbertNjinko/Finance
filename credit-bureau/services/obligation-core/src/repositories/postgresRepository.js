@@ -7,6 +7,7 @@ function mapObligation(row) {
   return {
     obligationId: row.obligation_id,
     institutionId: row.institution_id,
+    institutionName: row.institution_name || null,
     entityId: row.entity_id,
     borrowerName: row.borrower_name || row.full_name || null,
     productType: row.product_type,
@@ -14,6 +15,8 @@ function mapObligation(row) {
     principalAmount: Number(row.principal_amount),
     currency: row.currency,
     interestRate: row.interest_rate ? Number(row.interest_rate) : null,
+    pastDueAmount: row.past_due_amount ? Number(row.past_due_amount) : null,
+    nextDueDate: row.next_due_date ? row.next_due_date.toISOString().slice(0, 10) : null,
     disbursedAt: row.disbursed_at ? row.disbursed_at.toISOString().slice(0, 10) : null,
     maturityDate: row.maturity_date ? row.maturity_date.toISOString().slice(0, 10) : null,
     collateral: row.collateral,
@@ -28,6 +31,7 @@ function mapRepayment(row) {
     repaymentId: row.repayment_id,
     obligationId: row.obligation_id,
     institutionId: row.institution_id,
+    institutionName: row.institution_name || null,
     entityId: row.entity_id,
     borrowerName: row.borrower_name || null,
     paymentDate: row.payment_date ? row.payment_date.toISOString().slice(0, 10) : null,
@@ -92,9 +96,10 @@ export class PostgresObligationRepository {
   async findById(obligationId) {
     const result = await this.pool.query(
       `
-        SELECT o.*, b.full_name AS borrower_name
+        SELECT o.*, b.full_name AS borrower_name, i.name AS institution_name
           FROM core.obligations o
           LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
+          LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
          WHERE o.obligation_id = $1
       `,
       [obligationId]
@@ -110,19 +115,20 @@ export class PostgresObligationRepository {
     const where = [];
     if (entityId) {
       params.push(entityId);
-      where.push(`entity_id = $${params.length}`);
+      where.push(`o.entity_id = $${params.length}`);
     }
     if (institutionId) {
       params.push(institutionId);
-      where.push(`institution_id = $${params.length}`);
+      where.push(`o.institution_id = $${params.length}`);
     }
     params.push(limit);
     params.push(offset);
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const query = `
-      SELECT o.*, b.full_name AS borrower_name, count(*) OVER() AS total_rows
+      SELECT o.*, b.full_name AS borrower_name, i.name AS institution_name, count(*) OVER() AS total_rows
         FROM core.obligations o
         LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
+        LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
         ${whereClause}
         ORDER BY o.created_at DESC
         LIMIT $${params.length - 1} OFFSET $${params.length}
@@ -161,6 +167,7 @@ export class PostgresObligationRepository {
          FROM core.repayments r
          JOIN core.obligations o ON o.obligation_id = r.obligation_id
          LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
+         LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
         WHERE r.obligation_id = $1
         ORDER BY r.payment_date DESC`,
       [obligationId]
@@ -182,10 +189,11 @@ export class PostgresObligationRepository {
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     params.push(limit);
     const query = `
-      SELECT r.*, o.institution_id, o.entity_id, b.full_name AS borrower_name
+      SELECT r.*, o.institution_id, o.entity_id, b.full_name AS borrower_name, i.name AS institution_name
         FROM core.repayments r
         JOIN core.obligations o ON o.obligation_id = r.obligation_id
         LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
+        LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
         ${where}
         ORDER BY r.payment_date DESC, r.reported_at DESC
         LIMIT $${params.length}

@@ -35,6 +35,10 @@ export function ObligationsPage() {
   const [repaymentsLoading, setRepaymentsLoading] = useState(true);
   const [repaymentsError, setRepaymentsError] = useState<string | null>(null);
   const [institutions, setInstitutions] = useState<Record<string, string>>({});
+  const [filterInstitution, setFilterInstitution] = useState<string>('');
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const institutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
 
   useEffect(() => {
@@ -60,7 +64,11 @@ export function ObligationsPage() {
   useEffect(() => {
     const fetchObligations = async () => {
       try {
-        const response = await fetch('/api/obligations', {
+        const params = new URLSearchParams();
+        params.set('limit', String(pageSize));
+        params.set('offset', String(page * pageSize));
+        if (filterInstitution) params.set('institutionId', filterInstitution);
+        const response = await fetch(`/api/obligations?${params.toString()}`, {
           headers: {
             'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? ''
           }
@@ -72,6 +80,7 @@ export function ObligationsPage() {
           institutionName: item.institutionName || institutions[item.institutionId] || '—'
         }));
         setObligations(items);
+        setTotal(data.total || items.length);
       } catch (error) {
         console.error(error);
         alert('Unable to fetch obligations');
@@ -80,7 +89,7 @@ export function ObligationsPage() {
       }
     };
     fetchObligations();
-  }, []);
+  }, [institutions, filterInstitution, page, pageSize]);
 
   useEffect(() => {
     const fetchRepayments = async () => {
@@ -129,6 +138,8 @@ export function ObligationsPage() {
       return { ...o, outstanding: Math.max((o.principalAmount || 0) - repaid, 0) };
     });
   }, [obligations, repaymentTotals]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -193,6 +204,25 @@ export function ObligationsPage() {
             <strong>{totals.delinquent}</strong>
           </span>
         </div>
+        <div className="filters">
+          <label>
+            Institution
+            <select
+              value={filterInstitution}
+              onChange={(e) => {
+                setPage(0);
+                setFilterInstitution(e.target.value);
+              }}
+            >
+              <option value="">All institutions</option>
+              {Object.entries(institutions).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <button type="button" onClick={() => setShowUpload(true)}>
           Upload new batch
         </button>
@@ -236,6 +266,21 @@ export function ObligationsPage() {
           ))}
         </tbody>
       </table>
+      <div className="pagination">
+        <button type="button" onClick={() => setPage((p) => Math.max(p - 1, 0))} disabled={page === 0}>
+          Previous
+        </button>
+        <span>
+          Page {page + 1} of {totalPages}
+        </span>
+        <button
+          type="button"
+          onClick={() => setPage((p) => (p + 1 < totalPages ? p + 1 : p))}
+          disabled={page + 1 >= totalPages}
+        >
+          Next
+        </button>
+      </div>
 
       <section className="card mt-32">
         <header className="table-header">

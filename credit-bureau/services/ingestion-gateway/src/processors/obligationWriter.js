@@ -109,8 +109,8 @@ class ObligationWriter {
         const query = `
           INSERT INTO core.obligations
             (obligation_id, institution_id, entity_id, product_type, status, principal_amount, currency, interest_rate,
-             disbursed_at, maturity_date, collateral, purpose, created_at, updated_at)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW())
+             disbursed_at, maturity_date, past_due_amount, next_due_date, collateral, purpose, created_at, updated_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),NOW())
           ON CONFLICT (obligation_id) DO UPDATE
             SET status = EXCLUDED.status,
                 principal_amount = EXCLUDED.principal_amount,
@@ -118,6 +118,8 @@ class ObligationWriter {
                 interest_rate = EXCLUDED.interest_rate,
                 disbursed_at = EXCLUDED.disbursed_at,
                 maturity_date = EXCLUDED.maturity_date,
+                past_due_amount = EXCLUDED.past_due_amount,
+                next_due_date = EXCLUDED.next_due_date,
                 collateral = EXCLUDED.collateral,
                 purpose = EXCLUDED.purpose,
                 updated_at = NOW()
@@ -133,6 +135,8 @@ class ObligationWriter {
           typeof obligation.interestRate === 'number' ? obligation.interestRate : null,
           disbursedAt,
           maturityDate,
+          typeof obligation.pastDueAmount === 'number' ? obligation.pastDueAmount : null,
+          normalizeDate(obligation.nextDueDate),
           obligation.collateral ? JSON.stringify(obligation.collateral) : null,
           obligation.purpose || null
         ];

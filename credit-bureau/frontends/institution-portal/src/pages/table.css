@@ -56,6 +56,48 @@
   min-width: 180px;
 }
 
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #344054;
+}
+
+.filters select {
+  padding: 8px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pagination button {
+  background: #0b3d60;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background: #e4e7ec;
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+
 .status-pill {
   padding: 4px 10px;
   border-radius: 999px;

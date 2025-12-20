@@ -214,9 +214,3 @@ CREATE TABLE audit.access_logs (
 );
 
 CREATE INDEX ON audit.access_logs (institution_id, created_at DESC);
-
-
-ALTER TABLE core.obligations
-  ADD COLUMN past_due_amount NUMERIC(18,2),
-  ADD COLUMN next_due_date DATE;
-
