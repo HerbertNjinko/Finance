@@ -1,0 +1,42 @@
+[
+  {
+    "referenceId": "PAY-DEMOBK-0001",
+    "obligationId": "b441b206-8756-420f-8c1e-68dc01e08988",
+    "amount": 250000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-01",
+    "channel": "bank_transfer"
+  },
+  {
+    "referenceId": "PAY-DEMOBK-0002",
+    "obligationId": "c0d8317e-9ca6-4616-a383-3d0cc166db78",
+    "amount": 150000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-05",
+    "channel": "mobile_money"
+  },
+  {
+    "referenceId": "PAY-DEMOBK-0003",
+    "obligationId": "c0d8317e-9ca6-4616-a383-3d0cc166db78",
+    "amount": 180000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-20",
+    "channel": "mobile_money"
+  },
+  {
+    "referenceId": "PAY-DEMOBK-0004",
+    "obligationId": "5b7a8c07-0d5b-4e6a-9a9a-6c40d92c8ee5",
+    "amount": 60000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-22",
+    "channel": "mobile_money"
+  },
+  {
+    "referenceId": "PAY-DEMOBK-0005",
+    "obligationId": "e3e6f963-fb41-4d9c-86a9-c9192385d93c",
+    "amount": 160000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-28",
+    "channel": "bank_transfer"
+  }
+]

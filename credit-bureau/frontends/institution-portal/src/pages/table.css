@@ -51,6 +51,11 @@
   background: #f8fafc;
 }
 
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  min-width: 180px;
+}
+
 .status-pill {
   padding: 4px 10px;
   border-radius: 999px;

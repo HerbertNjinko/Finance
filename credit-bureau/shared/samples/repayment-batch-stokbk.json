@@ -1,0 +1,26 @@
+[
+  {
+    "referenceId": "PAY-STOKBK-0005",
+    "obligationId": "a5f4fa55-2f16-44d5-912d-3ede6324c0b6",
+    "amount": 210000,
+    "currency": "XAF",
+    "paymentDate": "2024-09-01",
+    "channel": "bank_transfer"
+  },
+  {
+    "referenceId": "PAY-STOKBK-0006",
+    "obligationId": "f0f2d1be-95f3-4c8f-b0d4-e2c7aa8fcb60",
+    "amount": 90000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-15",
+    "channel": "mobile_money"
+  },
+  {
+    "referenceId": "PAY-STOKBK-0007",
+    "obligationId": "e3e6f963-fb41-4d9c-86a9-c9192385d93c",
+    "amount": 140000,
+    "currency": "XAF",
+    "paymentDate": "2024-09-05",
+    "channel": "branch_cash"
+  }
+]

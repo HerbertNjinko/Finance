@@ -8,6 +8,7 @@ function mapObligation(row) {
     obligationId: row.obligation_id,
     institutionId: row.institution_id,
     entityId: row.entity_id,
+    borrowerName: row.borrower_name || row.full_name || null,
     productType: row.product_type,
     status: row.status,
     principalAmount: Number(row.principal_amount),
@@ -28,6 +29,7 @@ function mapRepayment(row) {
     obligationId: row.obligation_id,
     institutionId: row.institution_id,
     entityId: row.entity_id,
+    borrowerName: row.borrower_name || null,
     paymentDate: row.payment_date ? row.payment_date.toISOString().slice(0, 10) : null,
     amount: Number(row.amount),
     currency: row.currency,
@@ -88,9 +90,15 @@ export class PostgresObligationRepository {
   }
 
   async findById(obligationId) {
-    const result = await this.pool.query(`SELECT * FROM core.obligations WHERE obligation_id = $1`, [
-      obligationId
-    ]);
+    const result = await this.pool.query(
+      `
+        SELECT o.*, b.full_name AS borrower_name
+          FROM core.obligations o
+          LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
+         WHERE o.obligation_id = $1
+      `,
+      [obligationId]
+    );
     if (!result.rowCount) return null;
     const obligation = mapObligation(result.rows[0]);
     const repayments = await this.getRepayments(obligationId);
@@ -112,11 +120,12 @@ export class PostgresObligationRepository {
     params.push(offset);
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const query = `
-      SELECT *, count(*) OVER() AS total_rows
-      FROM core.obligations
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${params.length - 1} OFFSET $${params.length}
+      SELECT o.*, b.full_name AS borrower_name, count(*) OVER() AS total_rows
+        FROM core.obligations o
+        LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
+        ${whereClause}
+        ORDER BY o.created_at DESC
+        LIMIT $${params.length - 1} OFFSET $${params.length}
     `;
     const result = await this.pool.query(query, params);
     const total = result.rows[0]?.total_rows ? Number(result.rows[0].total_rows) : 0;
@@ -148,9 +157,10 @@ export class PostgresObligationRepository {
 
   async getRepayments(obligationId) {
     const result = await this.pool.query(
-      `SELECT r.*, o.institution_id, o.entity_id
+      `SELECT r.*, o.institution_id, o.entity_id, b.full_name AS borrower_name
          FROM core.repayments r
          JOIN core.obligations o ON o.obligation_id = r.obligation_id
+         LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
         WHERE r.obligation_id = $1
         ORDER BY r.payment_date DESC`,
       [obligationId]
@@ -172,9 +182,10 @@ export class PostgresObligationRepository {
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     params.push(limit);
     const query = `
-      SELECT r.*, o.institution_id, o.entity_id
+      SELECT r.*, o.institution_id, o.entity_id, b.full_name AS borrower_name
         FROM core.repayments r
         JOIN core.obligations o ON o.obligation_id = r.obligation_id
+        LEFT JOIN core.borrowers b ON b.entity_id = o.entity_id
         ${where}
         ORDER BY r.payment_date DESC, r.reported_at DESC
         LIMIT $${params.length}

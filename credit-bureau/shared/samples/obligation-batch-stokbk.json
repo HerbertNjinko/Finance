@@ -1,0 +1,89 @@
+[
+  {
+    "referenceId": "STOKBK-OBL-0004",
+    "institutionId": "c63b05b7-58a4-460b-a35f-144d18788e11",
+    "entity": {
+      "fullName": "Samuel Mvondo",
+      "dateOfBirth": "1988-04-17",
+      "gender": "male",
+      "nationality": "CM",
+      "primaryPhone": "+237690123456",
+      "primaryEmail": "samuel.mvondo@stokkbank.cm",
+      "address": { "street": "Boulevard de la Liberté", "city": "Douala", "country": "CM" },
+      "entityId": "55555555-5555-5555-5555-555555555555",
+      "identifiers": [
+        { "type": "national_id", "value": "840512334455", "issuingCountry": "CM", "issuedAt": "2008-05-20" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "a5f4fa55-2f16-44d5-912d-3ede6324c0b6",
+      "productType": "installment_loan",
+      "principalAmount": 3200000,
+      "currency": "XAF",
+      "interestRate": 0.155,
+      "disbursedAt": "2024-07-01",
+      "maturityDate": "2027-07-01",
+      "status": "active",
+      "collateral": { "type": "land_title", "value": 4000000, "description": "Plot in Bonamoussadi" },
+      "purpose": "Home improvement",
+      "nextDueDate": "2024-09-12"
+    }
+  },
+  {
+    "referenceId": "STOKBK-OBL-0005",
+    "institutionId": "c63b05b7-58a4-460b-a35f-144d18788e11",
+    "entity": {
+      "fullName": "Nadine Ngassa",
+      "dateOfBirth": "1992-09-08",
+      "gender": "female",
+      "nationality": "CM",
+      "primaryPhone": "+237694789012",
+      "primaryEmail": "nadine.ngassa@stokkbank.cm",
+      "address": { "street": "Rue des Cocotiers", "city": "Douala", "country": "CM" },
+      "entityId": "66666666-6666-6666-6666-666666666666",
+      "identifiers": [
+        { "type": "driver_license", "value": "DL-CM-998877", "issuingCountry": "CM", "issuedAt": "2021-03-14" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "f0f2d1be-95f3-4c8f-b0d4-e2c7aa8fcb60",
+      "productType": "revolving_credit",
+      "principalAmount": 1800000,
+      "currency": "XAF",
+      "interestRate": 0.19,
+      "creditLimit": 2000000,
+      "status": "active",
+      "purpose": "Consumer electronics",
+      "nextDueDate": "2024-09-18"
+    }
+  },
+  {
+    "referenceId": "STOKBK-OBL-0009",
+    "institutionId": "c63b05b7-58a4-460b-a35f-144d18788e11",
+    "entity": {
+      "fullName": "Blaise Owona",
+      "dateOfBirth": "1979-01-25",
+      "gender": "male",
+      "nationality": "CM",
+      "primaryPhone": "+237699998877",
+      "primaryEmail": "blaise.owona@stokkbank.cm",
+      "address": { "street": "Rue des Jasmins", "city": "Douala", "country": "CM" },
+      "entityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "identifiers": [
+        { "type": "national_id", "value": "790125334455", "issuingCountry": "CM", "issuedAt": "2000-02-10" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "e3e6f963-fb41-4d9c-86a9-c9192385d93c",
+      "productType": "installment_loan",
+      "principalAmount": 3600000,
+      "currency": "XAF",
+      "interestRate": 0.145,
+      "disbursedAt": "2024-01-20",
+      "maturityDate": "2026-01-20",
+      "status": "active",
+      "purpose": "Vehicle purchase",
+      "nextDueDate": "2024-09-08"
+    }
+  }
+]

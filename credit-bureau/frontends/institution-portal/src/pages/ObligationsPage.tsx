@@ -3,6 +3,8 @@ import './table.css';
 
 type Obligation = {
   obligationId: string;
+  institutionId: string;
+  institutionName?: string;
   borrowerName?: string;
   status: string;
   principalAmount: number;
@@ -13,6 +15,9 @@ type Obligation = {
 type Repayment = {
   repaymentId: string;
   obligationId: string;
+  institutionId?: string;
+  institutionName?: string;
+  borrowerName?: string;
   paymentDate: string | null;
   amount: number;
   currency: string;
@@ -29,7 +34,28 @@ export function ObligationsPage() {
   const [repayments, setRepayments] = useState<Repayment[]>([]);
   const [repaymentsLoading, setRepaymentsLoading] = useState(true);
   const [repaymentsError, setRepaymentsError] = useState<string | null>(null);
+  const [institutions, setInstitutions] = useState<Record<string, string>>({});
   const institutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
+
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        const response = await fetch('/api/institutions', {
+          headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' }
+        });
+        if (!response.ok) throw new Error('Failed to load institutions');
+        const data = await response.json();
+        const map: Record<string, string> = {};
+        (data.items || []).forEach((inst: { institutionId: string; name: string }) => {
+          map[inst.institutionId] = inst.name;
+        });
+        setInstitutions(map);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchInstitutions();
+  }, []);
 
   useEffect(() => {
     const fetchObligations = async () => {
@@ -41,7 +67,11 @@ export function ObligationsPage() {
         });
         if (!response.ok) throw new Error('Failed to load obligations');
         const data = await response.json();
-        setObligations(data.items || []);
+        const items = (data.items || []).map((item: Obligation) => ({
+          ...item,
+          institutionName: item.institutionName || institutions[item.institutionId] || '—'
+        }));
+        setObligations(items);
       } catch (error) {
         console.error(error);
         alert('Unable to fetch obligations');
@@ -64,7 +94,11 @@ export function ObligationsPage() {
         });
         if (!response.ok) throw new Error('Failed to load repayments');
         const data = await response.json();
-        setRepayments(data.items || []);
+        const items = (data.items || []).map((item: Repayment) => ({
+          ...item,
+          institutionName: item.institutionName || institutions[item.institutionId ?? institutionId] || '—'
+        }));
+        setRepayments(items);
       } catch (error) {
         console.error(error);
         setRepaymentsError('Unable to fetch repayments');
@@ -73,13 +107,28 @@ export function ObligationsPage() {
       }
     };
     fetchRepayments();
-  }, [institutionId]);
+  }, [institutionId, institutions]);
 
   const totals = useMemo(() => {
     const outstanding = obligations.reduce((sum, item) => sum + (item.principalAmount || 0), 0);
     const delinquent = obligations.filter((item) => item.status === 'delinquent').length;
     return { outstanding, delinquent };
   }, [obligations]);
+
+  const repaymentTotals = useMemo(() => {
+    const byObligation = new Map<string, number>();
+    repayments.forEach((p) => {
+      byObligation.set(p.obligationId, (byObligation.get(p.obligationId) || 0) + (p.amount || 0));
+    });
+    return byObligation;
+  }, [repayments]);
+
+  const obligationsWithOutstanding = useMemo(() => {
+    return obligations.map((o) => {
+      const repaid = repaymentTotals.get(o.obligationId) || 0;
+      return { ...o, outstanding: Math.max((o.principalAmount || 0) - repaid, 0) };
+    });
+  }, [obligations, repaymentTotals]);
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -152,10 +201,11 @@ export function ObligationsPage() {
       <table className="data-table">
         <thead>
           <tr>
-            <th>Reference</th>
             <th>Borrower</th>
+            <th>Institution</th>
             <th>Status</th>
             <th>Principal</th>
+            <th>Outstanding</th>
             <th>Past due</th>
             <th>Next due</th>
           </tr>
@@ -171,14 +221,15 @@ export function ObligationsPage() {
               <td colSpan={6}>No obligations found.</td>
             </tr>
           )}
-          {obligations.map((obligation) => (
+          {obligationsWithOutstanding.map((obligation) => (
             <tr key={obligation.obligationId}>
-              <td>{obligation.obligationId.slice(0, 8)}</td>
               <td>{obligation.borrowerName ?? '—'}</td>
+              <td>{obligation.institutionName ?? '—'}</td>
               <td>
                 <span className={`status-pill status-pill--${obligation.status}`}>{obligation.status}</span>
               </td>
               <td>{obligation.principalAmount?.toLocaleString() ?? '-'} XAF</td>
+              <td>{obligation.outstanding?.toLocaleString() ?? '-'} XAF</td>
               <td>{obligation.pastDueAmount ? `${obligation.pastDueAmount.toLocaleString()} XAF` : '-'}</td>
               <td>{obligation.nextDueDate ?? '-'}</td>
             </tr>
@@ -197,7 +248,8 @@ export function ObligationsPage() {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Obligation</th>
+              <th>Borrower</th>
+              <th>Institution</th>
               <th>Amount</th>
               <th>Channel</th>
             </tr>
@@ -221,7 +273,8 @@ export function ObligationsPage() {
             {repayments.map((repayment) => (
               <tr key={repayment.repaymentId}>
                 <td>{repayment.paymentDate ?? '—'}</td>
-                <td>{repayment.obligationId.slice(0, 8)}</td>
+                <td>{repayment.borrowerName ?? '—'}</td>
+                <td>{repayment.institutionName ?? '—'}</td>
                 <td>
                   {repayment.amount?.toLocaleString()} {repayment.currency}
                 </td>

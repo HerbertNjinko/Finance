@@ -1,0 +1,26 @@
+[
+  {
+    "referenceId": "PAY-NJKOBK-0007",
+    "obligationId": "7f2c690e-7a9a-418b-9c38-46c33f4c2f16",
+    "amount": 180000,
+    "currency": "XAF",
+    "paymentDate": "2024-07-25",
+    "channel": "bank_transfer"
+  },
+  {
+    "referenceId": "PAY-NJKOBK-0008",
+    "obligationId": "1c7efb5c-e706-4c8f-9cc9-6529e1735bb7",
+    "amount": 75000,
+    "currency": "XAF",
+    "paymentDate": "2024-08-18",
+    "channel": "mobile_money"
+  },
+  {
+    "referenceId": "PAY-NJKOBK-0009",
+    "obligationId": "9dc460c8-879b-4c56-9152-6c8c6b34d9c2",
+    "amount": 130000,
+    "currency": "XAF",
+    "paymentDate": "2024-09-05",
+    "channel": "branch_cash"
+  }
+]

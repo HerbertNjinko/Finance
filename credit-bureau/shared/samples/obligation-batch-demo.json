@@ -1,0 +1,119 @@
+[
+  {
+    "referenceId": "DEMOBK-OBL-0001",
+    "institutionId": "11111111-1111-1111-1111-111111111111",
+    "entity": {
+      "fullName": "Aminata Ngu",
+      "dateOfBirth": "1990-05-12",
+      "gender": "female",
+      "nationality": "CM",
+      "primaryPhone": "+237650000111",
+      "primaryEmail": "aminata.ngu@example.cm",
+      "address": { "street": "123 Rue du Marché", "city": "Yaoundé", "country": "CM" },
+      "entityId": "22222222-2222-2222-2222-222222222221",
+      "identifiers": [
+        { "type": "national_id", "value": "190203001122", "issuingCountry": "CM", "issuedAt": "2010-06-15" },
+        { "type": "phone", "value": "+237650000111" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "b441b206-8756-420f-8c1e-68dc01e08988",
+      "productType": "installment_loan",
+      "principalAmount": 5000000,
+      "currency": "XAF",
+      "interestRate": 0.14,
+      "disbursedAt": "2024-03-01",
+      "maturityDate": "2026-03-01",
+      "status": "active",
+      "collateral": { "type": "vehicle", "value": 2500000, "description": "2018 Toyota Corolla" },
+      "purpose": "SME working capital",
+      "nextDueDate": "2024-09-10"
+    }
+  },
+  {
+    "referenceId": "DEMOBK-OBL-0002",
+    "institutionId": "11111111-1111-1111-1111-111111111111",
+    "entity": {
+      "fullName": "Jacques Etoundi",
+      "dateOfBirth": "1985-11-03",
+      "gender": "male",
+      "nationality": "CM",
+      "primaryPhone": "+237655000222",
+      "primaryEmail": "jacques.etoundi@example.cm",
+      "address": { "street": "45 Avenue du Stade", "city": "Douala", "country": "CM" },
+      "entityId": "33333333-3333-3333-3333-333333333331",
+      "identifiers": [
+        { "type": "passport", "value": "EP1234567", "issuingCountry": "CM", "issuedAt": "2019-09-01" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "c0d8317e-9ca6-4616-a383-3d0cc166db78",
+      "productType": "revolving_credit",
+      "principalAmount": 2500000,
+      "currency": "XAF",
+      "interestRate": 0.2,
+      "creditLimit": 3000000,
+      "status": "delinquent",
+      "pastDueAmount": 180000,
+      "nextDueDate": "2024-08-05",
+      "purpose": "Household goods"
+    }
+  },
+  {
+    "referenceId": "DEMOBK-OBL-0010",
+    "institutionId": "11111111-1111-1111-1111-111111111111",
+    "entity": {
+      "fullName": "Estelle Manga",
+      "dateOfBirth": "1996-07-14",
+      "gender": "female",
+      "nationality": "CM",
+      "primaryPhone": "+237677444555",
+      "primaryEmail": "estelle.manga@demobank.cm",
+      "address": { "street": "Rue des Orangers", "city": "Yaoundé", "country": "CM" },
+      "entityId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "identifiers": [
+        { "type": "national_id", "value": "960714112233", "issuingCountry": "CM", "issuedAt": "2014-08-01" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "5b7a8c07-0d5b-4e6a-9a9a-6c40d92c8ee5",
+      "productType": "revolving_credit",
+      "principalAmount": 1200000,
+      "currency": "XAF",
+      "interestRate": 0.18,
+      "creditLimit": 1500000,
+      "status": "active",
+      "purpose": "Personal emergency",
+      "nextDueDate": "2024-09-15"
+    }
+  },
+  {
+    "referenceId": "DEMOBK-OBL-0011",
+    "institutionId": "11111111-1111-1111-1111-111111111111",
+    "entity": {
+      "fullName": "Blaise Owona",
+      "dateOfBirth": "1979-01-25",
+      "gender": "male",
+      "nationality": "CM",
+      "primaryPhone": "+237699998877",
+      "primaryEmail": "blaise.owona@stokkbank.cm",
+      "address": { "street": "Rue des Jasmins", "city": "Douala", "country": "CM" },
+      "entityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "identifiers": [
+        { "type": "national_id", "value": "790125334455", "issuingCountry": "CM", "issuedAt": "2000-02-10" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "e3e6f963-fb41-4d9c-86a9-c9192385d93c",
+      "productType": "installment_loan",
+      "principalAmount": 3600000,
+      "currency": "XAF",
+      "interestRate": 0.145,
+      "disbursedAt": "2024-01-20",
+      "maturityDate": "2026-01-20",
+      "status": "active",
+      "purpose": "Vehicle purchase",
+      "nextDueDate": "2024-09-08"
+    }
+  }
+]

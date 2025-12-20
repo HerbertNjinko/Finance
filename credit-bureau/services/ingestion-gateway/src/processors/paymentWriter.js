@@ -5,26 +5,30 @@ import { config } from '../config.js';
 const uuidRegex = /^[0-9a-fA-F-]{36}$/;
 
 async function resolveObligationId(client, identifier, institutionId) {
-  if (identifier && uuidRegex.test(identifier)) {
-    return identifier;
-  }
   if (!identifier) {
     return null;
   }
+  if (uuidRegex.test(identifier)) {
+    const { rowCount } = await client.query('SELECT 1 FROM core.obligations WHERE obligation_id = $1', [identifier]);
+    if (rowCount) {
+      return identifier;
+    }
+  }
   const { rows } = await client.query(
     `
-      SELECT si.submission_item_id
-        FROM ingestion.submission_items si
+      SELECT o.obligation_id
+        FROM core.obligations o
+        JOIN ingestion.submission_items si ON si.submission_item_id = o.obligation_id
         JOIN ingestion.submissions s ON s.submission_id = si.submission_id
        WHERE si.reference_id = $1
          AND s.institution_id = $2
          AND s.submission_type = 'obligations'
-       ORDER BY s.received_at DESC
+       ORDER BY o.created_at DESC
        LIMIT 1
     `,
     [identifier, institutionId]
   );
-  return rows[0]?.submission_item_id ?? null;
+  return rows[0]?.obligation_id ?? null;
 }
 
 class PaymentWriter {

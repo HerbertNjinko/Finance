@@ -1,0 +1,90 @@
+[
+  {
+    "referenceId": "NJKOBK-OBL-0006",
+    "institutionId": "69c7afb9-eee6-46be-87ac-5b6fc1caa22b",
+    "entity": {
+      "fullName": "Emmanuel Fonge",
+      "dateOfBirth": "1981-12-01",
+      "gender": "male",
+      "nationality": "CM",
+      "primaryPhone": "+237698001122",
+      "primaryEmail": "emmanuel.fonge@njkobk.cm",
+      "address": { "street": "Avenue Mbouda", "city": "Bamenda", "country": "CM" },
+      "entityId": "77777777-7777-7777-7777-777777777777",
+      "identifiers": [
+        { "type": "national_id", "value": "810112445566", "issuingCountry": "CM", "issuedAt": "2005-01-10" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "7f2c690e-7a9a-418b-9c38-46c33f4c2f16",
+      "productType": "installment_loan",
+      "principalAmount": 4200000,
+      "currency": "XAF",
+      "interestRate": 0.13,
+      "disbursedAt": "2024-02-15",
+      "maturityDate": "2027-02-15",
+      "status": "active",
+      "purpose": "Small business expansion",
+      "nextDueDate": "2024-09-20"
+    }
+  },
+  {
+    "referenceId": "NJKOBK-OBL-0007",
+    "institutionId": "69c7afb9-eee6-46be-87ac-5b6fc1caa22b",
+    "entity": {
+      "fullName": "Sylvie Mbappe",
+      "dateOfBirth": "1993-06-30",
+      "gender": "female",
+      "nationality": "CM",
+      "primaryPhone": "+237699223344",
+      "primaryEmail": "sylvie.mbappe@njkobk.cm",
+      "address": { "street": "Rue des Palmiers", "city": "Yaoundé", "country": "CM" },
+      "entityId": "88888888-8888-8888-8888-888888888888",
+      "identifiers": [
+        { "type": "national_id", "value": "930630778899", "issuingCountry": "CM", "issuedAt": "2012-07-01" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "1c7efb5c-e706-4c8f-9cc9-6529e1735bb7",
+      "productType": "revolving_credit",
+      "principalAmount": 1500000,
+      "currency": "XAF",
+      "interestRate": 0.21,
+      "creditLimit": 1800000,
+      "status": "delinquent",
+      "pastDueAmount": 90000,
+      "nextDueDate": "2024-08-12",
+      "purpose": "Travel and personal expenses"
+    }
+  },
+  {
+    "referenceId": "NJKOBK-OBL-0008",
+    "institutionId": "69c7afb9-eee6-46be-87ac-5b6fc1caa22b",
+    "entity": {
+      "fullName": "Patricia Talla",
+      "dateOfBirth": "1987-10-19",
+      "gender": "female",
+      "nationality": "CM",
+      "primaryPhone": "+237690555666",
+      "primaryEmail": "patricia.talla@njkobk.cm",
+      "address": { "street": "Rue des Cedres", "city": "Bafoussam", "country": "CM" },
+      "entityId": "99999999-9999-9999-9999-999999999999",
+      "identifiers": [
+        { "type": "passport", "value": "PA9001221", "issuingCountry": "CM", "issuedAt": "2020-09-09" }
+      ]
+    },
+    "obligation": {
+      "obligationId": "9dc460c8-879b-4c56-9152-6c8c6b34d9c2",
+      "productType": "installment_loan",
+      "principalAmount": 2600000,
+      "currency": "XAF",
+      "interestRate": 0.165,
+      "disbursedAt": "2024-05-10",
+      "maturityDate": "2026-05-10",
+      "status": "active",
+      "collateral": { "type": "gold", "value": 1000000, "description": "Gold jewelry pledge" },
+      "purpose": "Education fees",
+      "nextDueDate": "2024-09-25"
+    }
+  }
+]

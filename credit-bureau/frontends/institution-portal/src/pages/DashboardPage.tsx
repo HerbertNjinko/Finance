@@ -1,24 +1,48 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StatsCard } from '../components/StatsCard';
 import './dashboard.css';
 
-const submissionMetrics = [
-  { label: 'Submissions today', value: '184', subtext: '+12 vs yesterday', trend: 'up' as const },
-  { label: 'Pending validation', value: '9', subtext: '3 require data fixes', trend: 'down' as const }
-];
-
-const scoreMetrics = [
-  { label: 'Score lookups (24h)', value: '1,284', subtext: 'Peak at 11:00am', trend: 'up' as const },
-  { label: 'Average response', value: '420 ms', subtext: 'SLA 600 ms', trend: 'flat' as const }
-];
-
-const delinquencyMetrics = [
-  { label: 'Accounts 30+ days', value: '312', subtext: '+4% WoW', trend: 'up' as const },
-  { label: 'Recovery pipeline', value: '118', subtext: 'In litigation', trend: 'flat' as const }
-];
-
 export function DashboardPage() {
   const [isDownloading, setDownloading] = useState(false);
+  const [obligations, setObligations] = useState<any[]>([]);
+  const [repayments, setRepayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const institutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [oblRes, repRes] = await Promise.all([
+          fetch('/api/obligations', { headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' } }),
+          fetch(`/api/repayments?institutionId=${encodeURIComponent(institutionId)}`, {
+            headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' }
+          })
+        ]);
+        const oblJson = await oblRes.json();
+        const repJson = await repRes.json();
+        setObligations(oblJson.items || []);
+        setRepayments(repJson.items || []);
+      } catch (error) {
+        console.error('Failed to load dashboard data', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [institutionId]);
+
+  const stats = useMemo(() => {
+    const totalPrincipal = obligations.reduce((sum, o) => sum + (o.principalAmount || 0), 0);
+    const delinquent = obligations.filter((o) => o.status === 'delinquent').length;
+    const recentRepayments = repayments.slice(0, 5).reduce((sum, r) => sum + (r.amount || 0), 0);
+    return {
+      totalPrincipal,
+      delinquent,
+      repaymentTotal: recentRepayments,
+      obligationCount: obligations.length
+    };
+  }, [obligations, repayments]);
 
   const handleDailyReport = async () => {
     try {
@@ -58,23 +82,34 @@ export function DashboardPage() {
 
       <h3>Submissions</h3>
       <div className="stats-grid">
-        {submissionMetrics.map((metric) => (
-          <StatsCard key={metric.label} {...metric} />
-        ))}
+        <StatsCard
+          label="Active obligations"
+          value={loading ? '...' : String(stats.obligationCount)}
+          subtext="Current portfolio"
+          trend="flat"
+        />
+        <StatsCard
+          label="Outstanding principal"
+          value={loading ? '...' : `${stats.totalPrincipal.toLocaleString()} XAF`}
+          subtext="Sum of active obligations"
+          trend="flat"
+        />
       </div>
 
-      <h3>Score lookups</h3>
+      <h3>Repayments</h3>
       <div className="stats-grid">
-        {scoreMetrics.map((metric) => (
-          <StatsCard key={metric.label} {...metric} />
-        ))}
-      </div>
-
-      <h3>Delinquency reports</h3>
-      <div className="stats-grid">
-        {delinquencyMetrics.map((metric) => (
-          <StatsCard key={metric.label} {...metric} />
-        ))}
+        <StatsCard
+          label="Recent repayments"
+          value={loading ? '...' : `${stats.repaymentTotal.toLocaleString()} XAF`}
+          subtext="Last few reported"
+          trend="flat"
+        />
+        <StatsCard
+          label="Delinquent accounts"
+          value={loading ? '...' : String(stats.delinquent)}
+          subtext="Status: delinquent"
+          trend={stats.delinquent > 0 ? 'down' : 'up'}
+        />
       </div>
     </section>
   );
