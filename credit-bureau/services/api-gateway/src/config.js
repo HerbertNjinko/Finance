@@ -10,10 +10,15 @@ const splitCsv = (value = '') =>
 export const config = {
   env,
   auth: {
-    enabled: !isTest && Boolean(process.env.GATEWAY_API_KEYS),
-    apiKeys: splitCsv(process.env.GATEWAY_API_KEYS || '')
+    enabled: !isTest && (Boolean(process.env.GATEWAY_API_KEYS) || Boolean(process.env.AUTH_JWT_SECRET)),
+    apiKeys: splitCsv(process.env.GATEWAY_API_KEYS || ''),
+    jwtSecret: process.env.AUTH_JWT_SECRET || 'dev-secret-change-me'
   },
   upstreams: {
+    auth: {
+      baseUrl: process.env.AUTH_SERVICE_URL || 'http://127.0.0.1:4106',
+      apiKey: process.env.AUTH_SERVICE_KEY || ''
+    },
     ingestion: {
       baseUrl: process.env.INGESTION_SERVICE_URL || 'http://127.0.0.1:4001/v1',
       apiKey: process.env.INGESTION_SERVICE_KEY || ''

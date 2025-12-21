@@ -3,6 +3,7 @@ import { authorize } from '../middleware/auth.js';
 import { config } from '../config.js';
 
 const routes = [
+  { prefix: '/auth', upstream: 'auth' },
   { prefix: '/reports', handler: handleReports },
   { prefix: '/submissions', upstream: 'ingestion' },
   { prefix: '/identities', upstream: 'identity' },
@@ -24,18 +25,21 @@ function buildTargetUrl(route, requestUrl) {
   return `${upstream.baseUrl}${requestUrl.pathname}${requestUrl.search}`;
 }
 
-function buildHeaders(route) {
+function buildHeaders(route, req) {
   const upstream = config.upstreams[route.upstream];
   const headers = {
     'content-type': 'application/json',
     'x-api-key': upstream.apiKey
   };
+  if (req.headers.authorization) {
+    headers.authorization = req.headers.authorization;
+  }
   return headers;
 }
 
 async function proxyRequest(req, res, route, requestUrl) {
   const targetUrl = buildTargetUrl(route, requestUrl);
-  const upstreamHeaders = buildHeaders(route);
+  const upstreamHeaders = buildHeaders(route, req);
   const bodyChunks = [];
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     for await (const chunk of req) {
@@ -58,7 +62,7 @@ export function createServer() {
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const auth = authorize(req);
     if (!auth.authorized) {
-      const status = auth.reason === 'missing_api_key' ? 401 : 403;
+      const status = auth.reason === 'missing_credentials' ? 401 : 403;
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ code: auth.reason, message: 'Unauthorized request' }));
       return;
