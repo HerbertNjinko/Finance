@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StatsCard } from '../components/StatsCard';
 import './dashboard.css';
+import { getTokens } from '../lib/auth';
+
+const authHeader = () => {
+  const token = getTokens()?.accessToken;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export function DashboardPage() {
   const [isDownloading, setDownloading] = useState(false);
@@ -14,9 +20,9 @@ export function DashboardPage() {
       setLoading(true);
       try {
         const [oblRes, repRes] = await Promise.all([
-          fetch('/api/obligations', { headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' } }),
+          fetch('/api/obligations', { headers: authHeader() }),
           fetch(`/api/repayments?institutionId=${encodeURIComponent(institutionId)}`, {
-            headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' }
+            headers: authHeader()
           })
         ]);
         const oblJson = await oblRes.json();
@@ -48,7 +54,7 @@ export function DashboardPage() {
     try {
       setDownloading(true);
       const response = await fetch('/api/reports/daily', {
-        headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' }
+        headers: authHeader()
       });
       if (!response.ok) {
         throw new Error('Failed to download');

@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.VITE_API_GATEWAY_URL || '/api';
-const API_KEY = import.meta.env.VITE_GATEWAY_KEY || '';
+const TOKEN_KEY = 'regulator_portal_auth';
 
 function toQuery(params?: Record<string, string | number | undefined>) {
   if (!params) return '';
@@ -12,15 +12,27 @@ function toQuery(params?: Record<string, string | number | undefined>) {
   return `?${query.toString()}`;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+function authHeaders(init?: RequestInit) {
   const headers = new Headers(init?.headers ?? {});
   headers.set('Content-Type', 'application/json');
-  if (API_KEY) {
-    headers.set('x-api-key', API_KEY);
+  const tokenRaw = localStorage.getItem(TOKEN_KEY);
+  if (tokenRaw) {
+    try {
+      const parsed = JSON.parse(tokenRaw);
+      if (parsed?.accessToken) {
+        headers.set('Authorization', `Bearer ${parsed.accessToken}`);
+      }
+    } catch {
+      // ignore
+    }
   }
+  return headers;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers
+    headers: authHeaders(init)
   });
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -50,5 +62,11 @@ export const api = {
   deleteInstitution: (institutionId: string) =>
     request(`/institutions/${institutionId}`, {
       method: 'DELETE'
-    })
+    }),
+  listUsers: (params?: Record<string, string | number | undefined>) =>
+    request(`/auth/users${toQuery(params)}`),
+  inviteUser: (payload: Record<string, unknown>) =>
+    request('/auth/invitations', { method: 'POST', body: JSON.stringify(payload) }),
+  updateUserStatus: (userId: string, payload: Record<string, unknown>) =>
+    request(`/auth/users/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) })
 };

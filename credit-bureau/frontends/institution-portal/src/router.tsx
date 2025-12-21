@@ -3,15 +3,22 @@ import { AppLayout } from './components/AppLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { ObligationsPage } from './pages/ObligationsPage';
 import { DisputesPage } from './pages/DisputesPage';
+import { LoginPage } from './pages/LoginPage';
+import { RequireAuth } from './components/RequireAuth';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppLayout title="institution portal" />,
+    element: (
+      <RequireAuth>
+        <AppLayout title="institution portal" />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'obligations', element: <ObligationsPage /> },
       { path: 'disputes', element: <DisputesPage /> }
     ]
-  }
+  },
+  { path: '/login', element: <LoginPage /> }
 ]);

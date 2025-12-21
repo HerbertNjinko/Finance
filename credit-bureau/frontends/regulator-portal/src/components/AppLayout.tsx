@@ -1,15 +1,18 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../lib/AuthContext';
 import './layout.css';
 
 const nav = [
   { to: '/', label: 'Dashboard' },
   { to: '/obligations', label: 'Obligations' },
   { to: '/disputes', label: 'Disputes' },
-  { to: '/institutions', label: 'Institutions' }
+  { to: '/institutions', label: 'Institutions' },
+  { to: '/users', label: 'Users' }
 ];
 
 export function AppLayout({ title }: { title: string }) {
   const location = useLocation();
+  const { logout } = useAuth();
   return (
     <div className="layout">
       <aside>
@@ -21,6 +24,9 @@ export function AppLayout({ title }: { title: string }) {
             </Link>
           ))}
         </nav>
+        <button className="logout-button" onClick={logout}>
+          Logout
+        </button>
       </aside>
       <main>
         <Outlet />

@@ -1,13 +1,30 @@
-import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
 import { config } from '../config.js';
 
+function base64UrlDecode(str) {
+  return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+}
+
 function verifyJwt(token) {
+  if (!token) return { valid: false };
+  const parts = token.split('.');
+  if (parts.length !== 3) return { valid: false };
+  const [headerB64, payloadB64, signatureB64] = parts;
+  let header;
+  let payload;
   try {
-    const payload = jwt.verify(token, config.auth.jwtSecret);
-    return { valid: true, payload };
-  } catch (err) {
+    header = JSON.parse(base64UrlDecode(headerB64));
+    payload = JSON.parse(base64UrlDecode(payloadB64));
+  } catch {
     return { valid: false };
   }
+  if (header.alg !== 'HS256') return { valid: false };
+  const hmac = crypto.createHmac('sha256', config.auth.jwtSecret);
+  hmac.update(`${headerB64}.${payloadB64}`);
+  const expected = hmac.digest('base64url');
+  if (expected !== signatureB64) return { valid: false };
+  if (payload.exp && Date.now() / 1000 > payload.exp) return { valid: false };
+  return { valid: true, payload };
 }
 
 export function authorize(req) {

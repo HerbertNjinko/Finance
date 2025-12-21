@@ -6,6 +6,46 @@
 
 body { margin: 0; }
 
+.auth-layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6f8fb;
+}
+
+.auth-card {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d4d9e1;
+}
+
+.auth-card button {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #0f62fe;
+  color: #fff;
+  cursor: pointer;
+}
+
+.auth-card .error {
+  color: #b3261e;
+  font-size: 14px;
+}
+
 .layout {
   min-height: 100vh;
   display: grid;

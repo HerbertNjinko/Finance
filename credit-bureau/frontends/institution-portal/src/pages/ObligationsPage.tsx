@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import './table.css';
+import { getTokens } from '../lib/auth';
+
+const authHeader = () => {
+  const token = getTokens()?.accessToken;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 type Obligation = {
   obligationId: string;
@@ -50,7 +56,7 @@ export function ObligationsPage() {
     const fetchInstitutions = async () => {
       try {
         const response = await fetch('/api/institutions', {
-          headers: { 'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? '' }
+          headers: authHeader()
         });
         if (!response.ok) throw new Error('Failed to load institutions');
         const data = await response.json();
@@ -74,9 +80,7 @@ export function ObligationsPage() {
         params.set('offset', String(page * pageSize));
         if (filterInstitution) params.set('institutionId', filterInstitution);
         const response = await fetch(`/api/obligations?${params.toString()}`, {
-          headers: {
-            'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? ''
-          }
+          headers: authHeader()
         });
         if (!response.ok) throw new Error('Failed to load obligations');
         const data = await response.json();
@@ -106,9 +110,7 @@ export function ObligationsPage() {
         params.set('limit', String(repaymentPageSize));
         params.set('offset', String(repaymentPage * repaymentPageSize));
         const response = await fetch(`/api/repayments${params.toString() ? `?${params.toString()}` : ''}`, {
-          headers: {
-            'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? ''
-          }
+          headers: authHeader()
         });
         if (!response.ok) throw new Error('Failed to load repayments');
         const data = await response.json();

@@ -29,6 +29,17 @@ export async function createUserFromInvite(invite, password) {
   return findUserById(userId);
 }
 
+export async function updatePasswordAndActivate(userId, password) {
+  const hash = await hashPassword(password);
+  await pool.query(
+    `UPDATE auth.users
+        SET password_hash = $1, status = 'active', updated_at = NOW()
+      WHERE user_id = $2`,
+    [hash, userId]
+  );
+  return findUserById(userId);
+}
+
 export async function createSession(userId, refreshToken) {
   const sessionId = uuidv4();
   const refreshHash = hashToken(refreshToken);
@@ -100,4 +111,9 @@ export async function recordAudit({ userId, action, ip, userAgent, metadata }) {
      VALUES ($1,$2,$3,$4,$5,$6)`,
     [uuidv4(), userId || null, action, ip || null, userAgent || null, metadata || null]
   );
+}
+
+export async function updateUserStatus(userId, status) {
+  await pool.query(`UPDATE auth.users SET status = $1, updated_at = NOW() WHERE user_id = $2`, [status, userId]);
+  return findUserById(userId);
 }

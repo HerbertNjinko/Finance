@@ -1,6 +1,19 @@
 import http from 'node:http';
 import { config } from './config.js';
-import { findUserByEmail, createSession, verifyRefreshToken, revokeSession, createInvite, findInviteByToken, createUserFromInvite, listUsers, recordAudit } from './repository.js';
+import {
+  findUserByEmail,
+  createSession,
+  verifyRefreshToken,
+  revokeSession,
+  createInvite,
+  findInviteByToken,
+  createUserFromInvite,
+  listUsers,
+  recordAudit,
+  updateUserStatus,
+  findUserById,
+  updatePasswordAndActivate
+} from './repository.js';
 import { verifyPassword } from './password.js';
 import { signAccessToken, signRefreshToken, verifyToken } from './tokens.js';
 
@@ -49,10 +62,15 @@ async function handleLogin(req, res) {
   if (!email || !password) return send(res, 400, { code: 'invalid_request', message: 'email and password are required' });
 
   const user = await findUserByEmail(email);
-  if (!user || user.status !== 'active') return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
+  if (!user || (user.status !== 'active' && user.status !== 'reset_required')) {
+    return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
+  }
 
   const ok = await verifyPassword(password, user.password_hash);
   if (!ok) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
+  if (user.status === 'reset_required') {
+    return send(res, 403, { code: 'reset_required', message: 'Password reset required' });
+  }
 
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
@@ -146,6 +164,47 @@ async function handleListUsers(req, res, claims, requestUrl) {
   return send(res, 200, { items: users });
 }
 
+async function handleUpdateUserStatus(req, res, claims, userId) {
+  if (!requireRegulator(res, claims)) return;
+  const body = await readJson(req);
+  if (!body) return send(res, 400, { code: 'invalid_json', message: 'Invalid JSON body' });
+  const { status } = body;
+  if (!status || !['active', 'locked', 'reset_required', 'pending'].includes(status)) {
+    return send(res, 400, { code: 'invalid_request', message: 'status is required and must be valid' });
+  }
+  const user = await findUserById(userId);
+  if (!user) return send(res, 404, { code: 'not_found', message: 'User not found' });
+  const updated = await updateUserStatus(userId, status);
+  await recordAudit({ userId: claims.sub, action: 'user_status_change', metadata: { target: userId, status } });
+  return send(res, 200, updated);
+}
+
+async function handleResetPassword(req, res) {
+  const body = await readJson(req);
+  if (!body) return send(res, 400, { code: 'invalid_json', message: 'Invalid JSON body' });
+  const { email, current_password, new_password } = body;
+  if (!email || !current_password || !new_password) {
+    return send(res, 400, { code: 'invalid_request', message: 'email, current_password, new_password are required' });
+  }
+  const user = await findUserByEmail(email);
+  if (!user) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
+  const ok = await verifyPassword(current_password, user.password_hash);
+  if (!ok) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
+  const updated = await updatePasswordAndActivate(user.user_id, new_password);
+  await recordAudit({ userId: user.user_id, action: 'password_reset' });
+  const accessToken = signAccessToken(updated);
+  const refreshToken = signRefreshToken(updated);
+  await createSession(updated.user_id, refreshToken);
+  return send(res, 200, {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: config.auth.accessTtlSeconds,
+    refresh_expires_in: config.auth.refreshTtlSeconds,
+    role: updated.role,
+    institution_id: updated.institution_id
+  });
+}
+
 export function createServer() {
   return http.createServer(async (req, res) => {
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
@@ -169,6 +228,13 @@ export function createServer() {
     }
     if (req.method === 'GET' && requestUrl.pathname === '/auth/users') {
       return handleListUsers(req, res, claims, requestUrl);
+    }
+    if (req.method === 'PATCH' && requestUrl.pathname.startsWith('/auth/users/')) {
+      const userId = requestUrl.pathname.split('/').pop();
+      return handleUpdateUserStatus(req, res, claims, userId);
+    }
+    if (req.method === 'POST' && requestUrl.pathname === '/auth/reset-password') {
+      return handleResetPassword(req, res);
     }
 
     send(res, 404, { code: 'not_found', message: 'Route not found' });

@@ -37,9 +37,16 @@ function buildHeaders(route, req) {
   return headers;
 }
 
-async function proxyRequest(req, res, route, requestUrl) {
+async function proxyRequest(req, res, route, requestUrl, principal) {
   const targetUrl = buildTargetUrl(route, requestUrl);
   const upstreamHeaders = buildHeaders(route, req);
+  if (principal?.type === 'jwt') {
+    upstreamHeaders['x-auth-user-id'] = principal.userId || '';
+    upstreamHeaders['x-auth-role'] = principal.role || '';
+    if (principal.institutionId) {
+      upstreamHeaders['x-auth-institution-id'] = principal.institutionId;
+    }
+  }
   const bodyChunks = [];
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     for await (const chunk of req) {
@@ -81,7 +88,7 @@ export function createServer() {
     }
 
     try {
-      await proxyRequest(req, res, route, requestUrl);
+      await proxyRequest(req, res, route, requestUrl, auth.principal);
     } catch (error) {
       console.error('Gateway proxy error', error);
       res.writeHead(502, { 'Content-Type': 'application/json' });

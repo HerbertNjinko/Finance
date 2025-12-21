@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../lib/AuthContext';
 import './layout.css';
 
 const nav = [
@@ -9,6 +10,7 @@ const nav = [
 
 export function AppLayout({ title }: { title: string }) {
   const location = useLocation();
+  const { logout } = useAuth();
   return (
     <div className="layout">
       <aside>
@@ -20,6 +22,9 @@ export function AppLayout({ title }: { title: string }) {
             </Link>
           ))}
         </nav>
+        <button className="logout-button" onClick={logout}>
+          Logout
+        </button>
       </aside>
       <main>
         <Outlet />

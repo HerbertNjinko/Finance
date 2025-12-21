@@ -15,6 +15,10 @@ export default defineConfig(({ mode }) => {
           target: process.env.VITE_API_GATEWAY_URL || 'http://localhost:4100',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, '')
+        },
+        '/auth': {
+          target: process.env.VITE_API_GATEWAY_URL || 'http://localhost:4100',
+          changeOrigin: true
         }
       }
     }
