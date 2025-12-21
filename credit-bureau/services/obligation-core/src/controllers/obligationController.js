@@ -34,5 +34,5 @@ export async function listObligationsHandler({ query }) {
 
 export async function listRepaymentsHandler({ query }) {
   const repayments = await listRepayments(query);
-  return { statusCode: 200, body: { items: repayments } };
+  return { statusCode: 200, body: repayments };
 }

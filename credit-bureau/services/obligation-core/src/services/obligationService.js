@@ -127,14 +127,13 @@ export async function listObligations(query = {}) {
 }
 
 export async function listRepayments(query = {}) {
-  if (!query.obligationId && !query.institutionId) {
-    throw buildError('obligationId or institutionId is required', ['obligationId or institutionId']);
-  }
   const repository = getRepository();
   const limit = query.limit ? Number(query.limit) : 25;
+  const offset = query.offset ? Number(query.offset) : 0;
   return repository.listRepayments({
     obligationId: query.obligationId,
     institutionId: query.institutionId,
-    limit
+    limit,
+    offset
   });
 }

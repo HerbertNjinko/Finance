@@ -36,12 +36,15 @@ export function ObligationsPage() {
   const [repaymentsError, setRepaymentsError] = useState<string | null>(null);
   const [institutions, setInstitutions] = useState<Record<string, string>>({});
   const [filterInstitution, setFilterInstitution] = useState<string>('');
+  const [repaymentPage, setRepaymentPage] = useState(0);
+  const [repaymentPageSize] = useState(10);
+  const [repaymentTotal, setRepaymentTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const defaultInstitutionId = import.meta.env.VITE_INSTITUTION_ID ?? '11111111-1111-1111-1111-111111111111';
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>(defaultInstitutionId);
-  const institutionId = selectedInstitutionId;
+  const institutionId = filterInstitution || selectedInstitutionId || defaultInstitutionId;
 
   useEffect(() => {
     const fetchInstitutions = async () => {
@@ -98,7 +101,11 @@ export function ObligationsPage() {
       setRepaymentsLoading(true);
       setRepaymentsError(null);
       try {
-        const response = await fetch(`/api/repayments?institutionId=${encodeURIComponent(institutionId)}`, {
+        const params = new URLSearchParams();
+        if (filterInstitution) params.set('institutionId', filterInstitution);
+        params.set('limit', String(repaymentPageSize));
+        params.set('offset', String(repaymentPage * repaymentPageSize));
+        const response = await fetch(`/api/repayments${params.toString() ? `?${params.toString()}` : ''}`, {
           headers: {
             'x-api-key': import.meta.env.VITE_GATEWAY_KEY ?? ''
           }
@@ -110,6 +117,7 @@ export function ObligationsPage() {
           institutionName: item.institutionName || institutions[item.institutionId ?? institutionId] || '—'
         }));
         setRepayments(items);
+        setRepaymentTotal(data.total ?? items.length);
       } catch (error) {
         console.error(error);
         setRepaymentsError('Unable to fetch repayments');
@@ -118,7 +126,7 @@ export function ObligationsPage() {
       }
     };
     fetchRepayments();
-  }, [institutionId, institutions]);
+  }, [filterInstitution, repaymentPage, repaymentPageSize, institutions, institutionId]);
 
   const totals = useMemo(() => {
     const outstanding = obligations.reduce((sum, item) => sum + (item.principalAmount || 0), 0);
@@ -288,7 +296,7 @@ export function ObligationsPage() {
         <header className="table-header">
           <div>
             <h3>Recent repayments</h3>
-            <p>Latest repayments reported across this institution.</p>
+            <p>Latest repayments reported across {filterInstitution ? 'this institution' : 'all institutions'}.</p>
           </div>
         </header>
         <table className="data-table">
@@ -330,6 +338,29 @@ export function ObligationsPage() {
             ))}
           </tbody>
         </table>
+        <div className="pagination">
+          <button
+            type="button"
+            onClick={() => setRepaymentPage((p) => Math.max(p - 1, 0))}
+            disabled={repaymentPage === 0}
+          >
+            Previous
+          </button>
+          <span>
+            Page {repaymentPage + 1} of {Math.max(1, Math.ceil(repaymentTotal / repaymentPageSize))}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setRepaymentPage((p) =>
+                p + 1 < Math.max(1, Math.ceil(repaymentTotal / repaymentPageSize)) ? p + 1 : p
+              )
+            }
+            disabled={repaymentPage + 1 >= Math.max(1, Math.ceil(repaymentTotal / repaymentPageSize))}
+          >
+            Next
+          </button>
+        </div>
       </section>
 
       {showUpload && (

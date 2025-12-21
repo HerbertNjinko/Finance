@@ -175,7 +175,7 @@ export class PostgresObligationRepository {
     return result.rows.map(mapRepayment);
   }
 
-  async listRepayments({ obligationId, institutionId, limit = 25 }) {
+  async listRepayments({ obligationId, institutionId, limit = 25, offset = 0 }) {
     const clauses = [];
     const params = [];
     if (obligationId) {
@@ -187,7 +187,9 @@ export class PostgresObligationRepository {
       clauses.push(`o.institution_id = $${params.length}`);
     }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    const paramsForCount = [...params];
     params.push(limit);
+    params.push(offset);
     const query = `
       SELECT r.*, o.institution_id, o.entity_id, b.full_name AS borrower_name, i.name AS institution_name
         FROM core.repayments r
@@ -196,9 +198,24 @@ export class PostgresObligationRepository {
         LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
         ${where}
         ORDER BY r.payment_date DESC, r.reported_at DESC
-        LIMIT $${params.length}
+        LIMIT $${params.length - 1}
+        OFFSET $${params.length}
     `;
-    const result = await this.pool.query(query, params);
-    return result.rows.map(mapRepayment);
+    const [result, countResult] = await Promise.all([
+      this.pool.query(query, params),
+      this.pool.query(
+        `
+        SELECT COUNT(*) AS count
+          FROM core.repayments r
+          JOIN core.obligations o ON o.obligation_id = r.obligation_id
+          ${where}
+      `,
+        paramsForCount
+      )
+    ]);
+    return {
+      items: result.rows.map(mapRepayment),
+      total: Number(countResult.rows[0]?.count ?? result.rows.length)
+    };
   }
 }

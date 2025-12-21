@@ -12,7 +12,6 @@ CREATE SCHEMA IF NOT EXISTS identity;
 CREATE SCHEMA IF NOT EXISTS disputes;
 CREATE SCHEMA IF NOT EXISTS notifications;
 CREATE SCHEMA IF NOT EXISTS audit;
-CREATE SCHEMA IF NOT EXISTS auth;
 
 SET search_path TO core, public;
 
@@ -218,53 +217,9 @@ CREATE TABLE audit.access_logs (
 
 CREATE INDEX ON audit.access_logs (institution_id, created_at DESC);
 
--- Authentication and access control.
-CREATE TABLE auth.users (
-    user_id UUID PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('regulator', 'institution')),
-    institution_id UUID REFERENCES core.institutions(institution_id),
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'locked', 'pending', 'reset_required')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
 
-CREATE TABLE auth.invites (
-    invite_id UUID PRIMARY KEY,
-    email TEXT NOT NULL,
-    institution_id UUID REFERENCES core.institutions(institution_id),
-    role TEXT NOT NULL CHECK (role IN ('regulator', 'institution')),
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'revoked')),
-    token TEXT NOT NULL, -- one-time token for initial set-password
-    expires_at TIMESTAMPTZ NOT NULL,
-    created_by UUID REFERENCES auth.users(user_id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE auth.sessions (
-    session_id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(user_id) ON DELETE CASCADE,
-    refresh_token_hash TEXT NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_active_at TIMESTAMPTZ,
-    revoked_at TIMESTAMPTZ
-);
-
-CREATE TABLE auth.audit_log (
-    audit_id UUID PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(user_id),
-    action TEXT NOT NULL, -- login, logout, invite_sent, password_reset, lock, unlock
-    ip INET,
-    user_agent TEXT,
-    metadata JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX ON auth.sessions (user_id);
-CREATE INDEX ON auth.audit_log (user_id, created_at DESC);
-
-
+ALTER TABLE core.obligations
+  ADD COLUMN past_due_amount NUMERIC(18,2),
+  ADD COLUMN next_due_date DATE;
 
 
