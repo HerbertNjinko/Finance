@@ -12,8 +12,12 @@ import {
   recordAudit,
   updateUserStatus,
   findUserById,
-  updatePasswordAndActivate
+  updatePasswordAndActivate,
+  upsertTempUser,
+  resetWithTempPassword
 } from './repository.js';
+import { sendInviteEmail } from './mailer.js';
+import { sendResetEmail } from './mailer.js';
 import { verifyPassword } from './password.js';
 import { signAccessToken, signRefreshToken, verifyToken } from './tokens.js';
 
@@ -130,9 +134,19 @@ async function handleInvite(req, res, claims) {
   if (!body) return send(res, 400, { code: 'invalid_json', message: 'Invalid JSON body' });
   const { email, institutionId, role } = body;
   if (!email || !role) return send(res, 400, { code: 'invalid_request', message: 'email and role are required' });
+  const tempPassword = body.tempPassword || `Temp#${Math.random().toString(36).slice(2, 8)}`;
   const invite = await createInvite({ email, institutionId, role, createdBy: claims.sub });
-  await recordAudit({ userId: claims.sub, action: 'invite_sent', metadata: { email, institutionId, role } });
-  return send(res, 201, { inviteId: invite.inviteId, token: invite.token, expires_at: invite.expiresAt });
+  const user = await upsertTempUser({ email, role, institutionId, tempPassword });
+  // Best-effort email sending
+  sendInviteEmail({ email, token: invite.token, role, institutionName: body.institutionName, tempPassword }).catch((err) =>
+    console.error('Failed to send invite email', err)
+  );
+  await recordAudit({
+    userId: claims.sub,
+    action: 'invite_sent',
+    metadata: { email, institutionId, role, inviteId: invite.inviteId }
+  });
+  return send(res, 201, { inviteId: invite.inviteId, token: invite.token, expires_at: invite.expiresAt, tempPassword, user_id: user.user_id });
 }
 
 async function handleAcceptInvite(req, res, token) {
@@ -182,14 +196,15 @@ async function handleUpdateUserStatus(req, res, claims, userId) {
 async function handleResetPassword(req, res) {
   const body = await readJson(req);
   if (!body) return send(res, 400, { code: 'invalid_json', message: 'Invalid JSON body' });
-  const { email, current_password, new_password } = body;
-  if (!email || !current_password || !new_password) {
-    return send(res, 400, { code: 'invalid_request', message: 'email, current_password, new_password are required' });
+  const { email, token, new_password } = body;
+  if (!email || !token || !new_password) {
+    return send(res, 400, { code: 'invalid_request', message: 'email, token, new_password are required' });
   }
   const user = await findUserByEmail(email);
-  if (!user) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
-  const ok = await verifyPassword(current_password, user.password_hash);
-  if (!ok) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or password' });
+  if (!user) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or token' });
+  // token should be treated as the temp password for simplicity
+  const ok = await verifyPassword(token, user.password_hash);
+  if (!ok) return send(res, 401, { code: 'invalid_credentials', message: 'Invalid email or token' });
   const updated = await updatePasswordAndActivate(user.user_id, new_password);
   await recordAudit({ userId: user.user_id, action: 'password_reset' });
   const accessToken = signAccessToken(updated);
@@ -236,7 +251,26 @@ export function createServer() {
     if (req.method === 'POST' && requestUrl.pathname === '/auth/reset-password') {
       return handleResetPassword(req, res);
     }
+    if (req.method === 'POST' && requestUrl.pathname === '/auth/forgot-password') {
+      return handleForgotPassword(req, res);
+    }
 
     send(res, 404, { code: 'not_found', message: 'Route not found' });
   });
+}
+
+async function handleForgotPassword(req, res) {
+  const body = await readJson(req);
+  if (!body) return send(res, 400, { code: 'invalid_json', message: 'Invalid JSON body' });
+  const { email } = body;
+  if (!email) return send(res, 400, { code: 'invalid_request', message: 'email is required' });
+  const user = await findUserByEmail(email);
+  if (!user) {
+    return send(res, 200, { success: true }); // don’t leak existence
+  }
+  const tempPassword = body.tempPassword || `Temp#${Math.random().toString(36).slice(2, 8)}`;
+  await resetWithTempPassword(user.user_id, tempPassword);
+  await recordAudit({ userId: user.user_id, action: 'password_reset_requested' });
+  sendResetEmail({ email, tempPassword }).catch((err) => console.error('Failed to send reset email', err));
+  return send(res, 200, { success: true });
 }

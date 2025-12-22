@@ -24,10 +24,14 @@ export function LoginPage() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         if (data.code === 'reset_required') {
-          navigate('/reset-password', { state: { email } });
+          navigate('/reset-password', { state: { email, tempPassword: password, mode: 'change' } });
           return;
         }
         throw new Error('Login failed');
+      }
+      if (data.role !== 'regulator') {
+        setError('Only regulator users can sign in here.');
+        return;
       }
       login({
         accessToken: data.access_token,
@@ -60,6 +64,14 @@ export function LoginPage() {
         {error && <div className="error">{error}</div>}
         <button type="submit" disabled={loading}>
           {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => navigate('/reset-password', { state: { email } })}
+          style={{ marginTop: 8 }}
+        >
+          Forgot password?
         </button>
       </form>
     </div>

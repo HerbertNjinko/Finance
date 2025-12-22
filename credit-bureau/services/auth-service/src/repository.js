@@ -40,6 +40,44 @@ export async function updatePasswordAndActivate(userId, password) {
   return findUserById(userId);
 }
 
+export async function upsertTempUser({ email, role, institutionId, tempPassword }) {
+  const existing = await findUserByEmail(email);
+  const passwordHash = await hashPassword(tempPassword);
+  if (existing) {
+    await pool.query(
+      `UPDATE auth.users
+          SET password_hash = $1,
+              status = 'reset_required',
+              role = $2,
+              institution_id = $3,
+              updated_at = NOW()
+        WHERE user_id = $4`,
+      [passwordHash, role, institutionId || null, existing.user_id]
+    );
+    return findUserById(existing.user_id);
+  }
+  const userId = uuidv4();
+  await pool.query(
+    `INSERT INTO auth.users (user_id, email, password_hash, role, institution_id, status, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,'reset_required',NOW(),NOW())`,
+    [userId, email, passwordHash, role, institutionId || null]
+  );
+  return findUserById(userId);
+}
+
+export async function resetWithTempPassword(userId, tempPassword) {
+  const passwordHash = await hashPassword(tempPassword);
+  await pool.query(
+    `UPDATE auth.users
+        SET password_hash = $1,
+            status = 'reset_required',
+            updated_at = NOW()
+      WHERE user_id = $2`,
+    [passwordHash, userId]
+  );
+  return findUserById(userId);
+}
+
 export async function createSession(userId, refreshToken) {
   const sessionId = uuidv4();
   const refreshHash = hashToken(refreshToken);

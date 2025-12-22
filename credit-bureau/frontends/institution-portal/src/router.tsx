@@ -4,6 +4,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ObligationsPage } from './pages/ObligationsPage';
 import { DisputesPage } from './pages/DisputesPage';
 import { LoginPage } from './pages/LoginPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { RequireAuth } from './components/RequireAuth';
 
 export const router = createBrowserRouter([
@@ -20,5 +21,6 @@ export const router = createBrowserRouter([
       { path: 'disputes', element: <DisputesPage /> }
     ]
   },
-  { path: '/login', element: <LoginPage /> }
+  { path: '/login', element: <LoginPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> }
 ]);

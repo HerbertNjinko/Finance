@@ -83,6 +83,10 @@ main { padding: 32px; }
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
+.stat-warning { border-left: 4px solid #f79009; }
+.stat-info { border-left: 4px solid #0f62fe; }
+.stat-success { border-left: 4px solid #12b76a; }
+
 form label {
   display: flex;
   flex-direction: column;

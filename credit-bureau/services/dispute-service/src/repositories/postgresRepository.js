@@ -7,6 +7,8 @@ function mapRow(row) {
   return {
     disputeId: row.dispute_id,
     entityId: row.entity_id,
+    borrowerName: row.borrower_name || null,
+    institutionName: row.institution_name || null,
     obligationId: row.obligation_id,
     submittedBy: row.submitted_by,
     channel: row.channel,
@@ -59,9 +61,15 @@ export class PostgresDisputeRepository {
   }
 
   async findById(disputeId) {
-    const result = await this.pool.query(`SELECT * FROM disputes.disputes WHERE dispute_id = $1`, [
-      disputeId
-    ]);
+    const result = await this.pool.query(
+      `SELECT d.*, b.full_name AS borrower_name, i.name AS institution_name
+         FROM disputes.disputes d
+         LEFT JOIN core.borrowers b ON b.entity_id = d.entity_id
+         LEFT JOIN core.obligations o ON o.obligation_id = d.obligation_id
+         LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
+        WHERE d.dispute_id = $1`,
+      [disputeId]
+    );
     if (!result.rowCount) return null;
     return mapRow(result.rows[0]);
   }
@@ -86,7 +94,7 @@ export class PostgresDisputeRepository {
       return this.findById(disputeId);
     }
     let closedClause = '';
-    if (updates.status && ['resolved', 'rejected', 'closed'].includes(updates.status)) {
+    if (updates.status && ['resolved', 'rejected', 'closed', 'approved', 'denied'].includes(updates.status)) {
       closedClause = ', closed_at = NOW()';
     }
     const query = `
@@ -114,7 +122,14 @@ export class PostgresDisputeRepository {
     }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const result = await this.pool.query(
-      `SELECT *, count(*) OVER() AS total_rows FROM disputes.disputes ${where} ORDER BY opened_at DESC LIMIT 100`,
+      `SELECT d.*, b.full_name AS borrower_name, i.name AS institution_name, count(*) OVER() AS total_rows
+         FROM disputes.disputes d
+         LEFT JOIN core.borrowers b ON b.entity_id = d.entity_id
+         LEFT JOIN core.obligations o ON o.obligation_id = d.obligation_id
+         LEFT JOIN core.institutions i ON i.institution_id = o.institution_id
+        ${where}
+        ORDER BY opened_at DESC
+        LIMIT 100`,
       values
     );
     const total = result.rows[0]?.total_rows ? Number(result.rows[0].total_rows) : 0;

@@ -21,10 +21,18 @@ export function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (data.code === 'reset_required') {
+          navigate('/reset-password', { state: { email, tempPassword: password, mode: 'change' } });
+          return;
+        }
         throw new Error('Login failed');
       }
-      const data = await response.json();
+      if (data.role !== 'institution') {
+        setError('Only institution users can sign in here.');
+        return;
+      }
       login({
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
@@ -56,6 +64,14 @@ export function LoginPage() {
         {error && <div className="error">{error}</div>}
         <button type="submit" disabled={loading}>
           {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => navigate('/reset-password', { state: { email } })}
+          style={{ marginTop: 8 }}
+        >
+          Forgot password?
         </button>
       </form>
     </div>

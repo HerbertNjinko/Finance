@@ -16,8 +16,10 @@ async function emitEvent(eventType, dispute) {
       eventId: crypto.randomUUID(),
       disputeId: dispute.disputeId,
       entityId: dispute.entityId,
+      obligationId: dispute.obligationId,
       status: dispute.status,
       reason: dispute.reason,
+      borrowerName: dispute.borrowerName ?? null,
       resolutionSummary: dispute.resolutionSummary ?? null
     });
   } catch (error) {
